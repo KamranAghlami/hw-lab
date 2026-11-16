@@ -1,0 +1,18 @@
+# python
+venv/
+__pycache__/
+*.pyc
+
+# build outputs (CI produces these; never commit)
+out/
+build/
+
+# KiCad per-user / transient files
+*.kicad_prl
+*-backups/
+_autosave-*
+*.lck
+~*.lck
+fp-info-cache
+*.bak
+\#auto_saved_files\#

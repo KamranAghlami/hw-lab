@@ -1,0 +1,33 @@
+# Ad-hoc remote KiCad sandbox. The dev machine has no KiCad, so experiments
+# (format probes, API checks) run here: `gh workflow run probe.yml -f script=<name>`
+# runs ci/probe/<name>.sh inside the pinned KiCad image and uploads ./out.
+name: probe
+on:
+  workflow_dispatch:
+    inputs:
+      script:
+        description: "ci/probe/<script>.sh to run"
+        required: true
+      image:
+        description: "container image"
+        default: "kicad/kicad:10.0.8"
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    container:
+      image: ${{ inputs.image }}
+      options: --user root
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: run probe
+        run: |
+          mkdir -p out
+          bash ci/probe/${{ inputs.script }}.sh 2>&1 | tee out/probe.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: probe-${{ inputs.script }}
+          path: out
+          retention-days: 7
