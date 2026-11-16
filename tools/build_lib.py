@@ -84,7 +84,8 @@ def rename(sym: list, new: str) -> None:
 
 
 def insert_property(sym: list, prop: list) -> None:
-    props = list(k.children(sym, "property"))
+    """Insert after the last user field; KiCad keeps ki_* fields last."""
+    props = [p for p in k.children(sym, "property") if not str(p[1]).startswith("ki_")]
     idx = sym.index(props[-1]) + 1 if props else 2
     sym.insert(idx, prop)
 
