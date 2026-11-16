@@ -36,6 +36,8 @@ jobs:
           git config --global --add safe.directory "$PWD"
           git diff --exit-code -- hardware/hwlab.kicad_sch || {
             echo "::error::hardware/hwlab.kicad_sch is stale: run python hardware/design.py and commit"; exit 1; }
+      - name: Schematic readability (overlap lint)
+        run: python3 tools/sch_overlap.py $BOARD.kicad_sch
       - name: ERC
         run: |
           mkdir -p out
@@ -49,7 +51,7 @@ jobs:
       - name: DRC (with schematic parity)
         if: always()
         run: |
-          kicad-cli pcb drc --severity-all --schematic-parity --format json -o out/drc.json $BOARD.kicad_pcb
+          kicad-cli pcb drc --severity-all --schematic-parity --refill-zones --format json -o out/drc.json $BOARD.kicad_pcb
           python3 tools/check_report.py drc out/drc.json --waivers hardware/waivers.toml --allow-warnings
       - uses: actions/upload-artifact@v4
         if: always()

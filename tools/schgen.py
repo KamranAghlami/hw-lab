@@ -221,15 +221,8 @@ class Design:
                     items.append((ORDER["junction"], uid("junction", ref, *e), S(
                         "junction", S("at", *e), S("diameter", 0), S("color", 0, 0, 0, 0),
                         S("uuid", uid("junction", ref, *e)))))
-                if d in (0, 180):  # vertical bar: hang the symbol off its top/bottom, upright
-                    body = self.lib[net].pins[0].angle
-                    tip = ends[-1] if body == 270 else ends[0]
-                    sgn = 1 if body == 270 else -1
-                    p2 = (tip[0], round(tip[1] + sgn * STUB, 4))
-                    items.append(self._wire(tip, p2, ("tail", ref, *tip)))
-                    items.append((ORDER["symbol"], uid("pwr", *key), self._power(net, p2, body, key)))
-                else:
-                    items.append((ORDER["symbol"], uid("pwr", *key), self._power(net, ends[0], d, key)))
+                # one power symbol for the whole run, at its first end, pointing outward
+                items.append((ORDER["symbol"], uid("pwr", *key), self._power(net, ends[0], d, key)))
         items.sort(key=lambda t: (t[0], t[1]))
         lib_symbols = [self._lib_symbol(s) for _, s in sorted(used.items())]
         title = S("title_block")
@@ -253,7 +246,8 @@ class Design:
         node[1] = f"{self.lib.nickname}:{sym.name}"
         return node
 
-    def _fields(self, sym: LibSym, at: tuple[float, float], values: dict[str, str], vertical_2pin: bool) -> list:
+    def _fields(self, sym: LibSym, at: tuple[float, float], values: dict[str, str], vertical_2pin: bool,
+                rotation: int = 0) -> list:
         out = []
         for prop in k.children(sym.node, "property"):
             key = str(prop[1])
@@ -261,7 +255,8 @@ class Design:
                 continue
             pat = k.find(prop, "at")
             px, py, pa = float(pat[1]), float(pat[2]), float(pat[3])
-            fx, fy, fa = at[0] + px, at[1] - py, pa
+            rx, ry = rot(px, py, rotation)  # fields turn with the symbol, text stays readable
+            fx, fy, fa = at[0] + rx, at[1] - ry, (pa + rotation) % 180
             eff = copy.deepcopy(k.find(prop, "effects"))
             if vertical_2pin and key in ("Reference", "Value"):
                 fx, fy, fa = at[0] + 2.54, at[1] + (-1.27 if key == "Reference" else 1.27), 0
@@ -300,7 +295,7 @@ class Design:
                  S("unit", 1), S("body_style", 1), S("exclude_from_sim", Sym("no")), S("in_bom", Sym("yes")),
                  S("on_board", Sym("yes")), S("in_pos_files", Sym("yes")), S("dnp", Sym("no")),
                  S("uuid", uid("pwr", *key)))
-        node += self._fields(sym, at, {"Reference": ref, "Value": net}, False)
+        node += self._fields(sym, at, {"Reference": ref, "Value": net}, False, r)
         node.append(S("pin", "1", S("uuid", uid("pwrpin", *key))))
         node.append(self._instances(ref))
         return node
