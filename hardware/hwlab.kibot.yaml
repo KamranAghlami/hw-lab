@@ -20,6 +20,8 @@ import:
 preflight:
   # agent text edits don't refill pours; plot from freshly filled zones
   fill_zones: true
+  # iBOM needs the netlist/XML to show user fields (LCSC, MPN)
+  update_xml: true
   # stamp the commit into the title block / silkscreen text variable ${GIT_HASH}
   set_text_variables:
     - name: GIT_HASH
@@ -61,12 +63,15 @@ outputs:
     comment: 3D render, isometric
     type: render_3d
     dir: img
+    output: '%f-3D_iso.%x'
     options: {view: top, rotate_x: 3, rotate_z: -2, ray_tracing: false, width: 1600, height: 1200}
 
   - name: step
-    comment: STEP model of the assembly
-    type: step
+    comment: STEP model of the assembly (KiBot recommends export_3d on KiCad 9+)
+    type: export_3d
     dir: 3d
+    options:
+      format: step
 
   - name: diff_pcb
     comment: Visual PCB diff against DIFF_OLD

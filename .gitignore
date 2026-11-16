@@ -18,3 +18,9 @@ fp-info-cache
 \#auto_saved_files\#
 hardware/lib/.cache/
 experiments/skidl/out/
+
+# SKiDL run artifacts
+*.erc
+*_sklib.py
+skidl_REPL.*
+board.log
