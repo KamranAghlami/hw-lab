@@ -106,6 +106,8 @@ def add_gnd_pours(board, bcfg: dict, layers=("B.Cu",)):
     x1, y1, x2, y2, _ = outline_of(bcfg)
     for name in layers:
         layer = board.GetLayerID(name)
+        if layer < 0:
+            raise SystemExit(f"unknown layer {name!r} for GND pour")
         z = pcbnew.ZONE(board)
         z.SetLayer(layer)
         z.SetNet(gnd)
@@ -129,11 +131,15 @@ def add_silk(board, items: list[dict]):
         t = pcbnew.PCB_TEXT(board)
         t.SetText(it["text"])
         t.SetPosition(pcbnew.VECTOR2I(MM(it["at"][0]), MM(it["at"][1])))
-        t.SetLayer(board.GetLayerID(it.get("layer", "F.SilkS")))
+        lname = {"F.SilkS": "F.Silkscreen", "B.SilkS": "B.Silkscreen"}.get(it.get("layer"), it.get("layer", "F.Silkscreen"))
+        lid = board.GetLayerID(lname)
+        if lid < 0:
+            raise SystemExit(f"unknown layer {lname!r} for silk text {it['text']!r}")
+        t.SetLayer(lid)
         size = it.get("size", 1.0)
         t.SetTextSize(pcbnew.VECTOR2I(MM(size), MM(size)))
         t.SetTextThickness(MM(size * 0.15))
-        if it.get("layer", "F.SilkS").startswith("B."):
+        if lname.startswith("B."):
             t.SetMirrored(True)
         board.Add(t)
 
