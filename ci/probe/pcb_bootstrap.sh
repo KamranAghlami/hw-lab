@@ -31,6 +31,7 @@ pcbnew.ZONE_FILLER(b).Fill(b.Zones())
 pcbnew.SaveBoard('hwlab.kicad_pcb', b)
 print('tracks', len(b.GetTracks()))
 PY
+python3 ../tools/stitch_gnd.py hwlab.kicad_pcb
 cp hwlab.kicad_pcb $o/routed.kicad_pcb
 kicad-cli pcb drc --severity-all --schematic-parity -o $o/drc-routed.rpt hwlab.kicad_pcb; grep -E "^\[|Found|\*\*" $o/drc-routed.rpt | sort | uniq -c | sort -rn | head -30
 kicad-cli pcb render --side top -w 1600 -h 1100 -o $o/routed-top.png hwlab.kicad_pcb

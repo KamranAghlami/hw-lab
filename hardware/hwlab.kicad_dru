@@ -12,3 +12,9 @@
 	(constraint hole_to_hole (min 0.5mm)))
 (rule "jlc_edge_clearance"
 	(constraint edge_clearance (min 0.3mm)))
+
+# Tiny SMD pads (USB-C contacts, 0.5 mm-pitch LGA) can only get one thermal spoke
+# from a pour; accept that for these two parts only.
+(rule "fine_pitch_single_spoke"
+	(condition "A.Type == 'Pad' && (A.memberOfFootprint('J1') || A.memberOfFootprint('U3'))")
+	(constraint min_resolved_spokes (min 1)))

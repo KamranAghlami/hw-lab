@@ -21,10 +21,10 @@ gnd_pour_layers = ["F.Cu", "B.Cu"]
 [parts]
 # module, rotated so the antenna points left; body spans x 100..125.5, y 118..136
 U1  = [112.75, 126.99, 90]
-C3  = [108.5, 139.5, 90]     # 100n at 3V3 pin 2 (108.76, 135.74)
-C7  = [110.5, 139.5, 90]     # 10u bulk at the module
-R3  = [113.0, 139.5, 90]     # EN pull-up, EN = pin 3 (110.03, 135.74)
-C4  = [115.0, 139.5, 90]     # EN RC
+C3  = [108.0, 139.5, 90]     # 100n at 3V3 pin 2 (108.76, 135.74)
+C7  = [111.0, 139.5, 90]     # 10u bulk at the module
+R3  = [114.0, 139.5, 90]     # EN pull-up, EN = pin 3 (110.03, 135.74)
+C4  = [117.0, 139.5, 90]     # EN RC
 # USB-C on the right edge, mouth right
 J1  = [181.6, 126.99, 90]
 R1  = [175.0, 121.0, 0]
@@ -32,7 +32,7 @@ R2  = [175.0, 133.0, 0]
 # LDO block between USB and module
 U2  = [166.0, 112.0, 0]
 C1  = [160.5, 116.5, 0]      # 10u on VBUS (LDO in)
-C2  = [171.5, 116.5, 0]      # 22u on +3V3 (LDO out)
+C2  = [173.5, 117.5, 0]      # 22u on +3V3 (LDO out)
 # IMU mid-board
 U3  = [146.0, 127.0, 0]
 C5  = [142.5, 127.0, 90]
@@ -48,20 +48,20 @@ J2  = [136.0, 103.5, 180]    # debug UART, mouth up through the top edge
 
 [[silk]]
 text = "hw-lab ESP32-S3 rev 0.1 ${GIT_HASH}"
-at = [162.0, 149.5]
-size = 1.2
+at = [166.0, 150.0]
+size = 1.0
 
 [[silk]]
 text = "RST"
-at = [130.0, 144.6]
+at = [124.0, 148.5]
 
 [[silk]]
 text = "BOOT"
-at = [142.0, 144.6]
+at = [136.0, 148.5]
 
 [[silk]]
 text = "GND 3V3 TX RX"
-at = [136.0, 107.9]
+at = [136.0, 109.4]
 size = 0.8
 
 [[silk]]

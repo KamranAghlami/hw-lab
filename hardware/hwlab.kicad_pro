@@ -91,7 +91,7 @@
       {
         "name": "Supply",
         "clearance": 0.15,
-        "track_width": 0.3,
+        "track_width": 0.25,
         "via_diameter": 0.6,
         "via_drill": 0.3,
         "priority": 1
@@ -134,5 +134,8 @@
   },
   "schematic": {
     "page_layout_descr_file": ""
+  },
+  "text_variables": {
+    "GIT_HASH": "dev"
   }
 }

@@ -40,8 +40,7 @@ def main():
         res.append({"check": name, "pass": bool(ok), "detail": detail})
 
     # decap distance
-    ic_pads = [p for r, fp in fps.items() if r.startswith("U") for p in fp.Pads()
-               if p.GetNetname() == "+3V3" and p.GetPinType() in ("power_in", "power_out")]
+    ic_pads = [p for r, fp in fps.items() if r.startswith("U") for p in fp.Pads() if p.GetNetname() == "+3V3"]
     worst = []
     for r, fp in sorted(fps.items()):
         if not r.startswith("C"):
