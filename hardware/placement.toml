@@ -1,0 +1,30 @@
+# Initial placement (mm, board coordinates; rot in degrees CCW; side F/B).
+# Used by tools/pcb_sync.py ONLY when a footprint is first added to the board.
+# After that the owner moves parts in the KiCad GUI and the .kicad_pcb is the
+# source of truth for positions; this file is never re-applied.
+
+[board]
+outline = [100.0, 100.0, 140.0, 160.0]  # x1 y1 x2 y2, 40 x 60 mm
+
+[parts]
+U1  = [120.0, 112.75, 0]    # antenna flush with the top edge
+J1  = [120.0, 155.5, 0]     # USB-C mouth on the bottom edge
+R1  = [113.0, 152.0, 90]
+R2  = [127.0, 152.0, 90]
+U2  = [107.0, 145.0, 0]
+C1  = [103.5, 152.0, 90]
+C2  = [109.5, 152.0, 90]
+C3  = [104.0, 129.0, 90]
+C7  = [106.5, 129.0, 90]
+R3  = [110.0, 129.0, 90]
+C4  = [112.5, 129.0, 90]
+SW2 = [106.0, 136.0, 0]
+SW1 = [134.0, 136.0, 0]
+U3  = [124.0, 136.0, 0]
+C5  = [120.5, 136.0, 90]
+C6  = [127.5, 136.0, 90]
+R4  = [122.0, 131.0, 0]
+R5  = [126.0, 131.0, 0]
+R6  = [130.0, 129.0, 0]
+D1  = [134.0, 129.0, 0]
+J2  = [135.5, 146.0, 90]
