@@ -1,0 +1,109 @@
+# Hardware CI: gates (regen, ERC, DRC, pin map) + fab/review outputs (KiBot),
+# and a GitHub release with the complete fab package on hw-vX.Y tags.
+name: hardware
+on:
+  push:
+    branches: [main]
+    tags: ["hw-v*"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: hardware-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write   # release job
+  packages: read    # pull the CI image from GHCR
+
+env:
+  BOARD: hardware/hwlab
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    container:
+      image: ghcr.io/kamranaghlami/hw-lab-ci:10.0.8
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      options: --user root
+    steps:
+      - uses: actions/checkout@v4
+      - name: Schematic matches its generator
+        run: |
+          python3 hardware/design.py
+          git config --global --add safe.directory "$PWD"
+          git diff --exit-code -- hardware/hwlab.kicad_sch || {
+            echo "::error::hardware/hwlab.kicad_sch is stale: run python hardware/design.py and commit"; exit 1; }
+      - name: ERC
+        run: |
+          mkdir -p out
+          kicad-cli sch erc --severity-all --format json -o out/erc.json $BOARD.kicad_sch
+          python3 tools/check_report.py erc out/erc.json --waivers hardware/waivers.toml
+      - name: Netlist + firmware pin map
+        if: always()
+        run: |
+          kicad-cli sch export netlist --format kicadsexpr -o out/hwlab.net $BOARD.kicad_sch
+          python3 tools/pinmap.py check out/hwlab.net firmware/include/board_pins.h
+      - name: DRC (with schematic parity)
+        if: always()
+        run: |
+          kicad-cli pcb drc --severity-all --schematic-parity --format json -o out/drc.json $BOARD.kicad_pcb
+          python3 tools/check_report.py drc out/drc.json --waivers hardware/waivers.toml --allow-warnings
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reports
+          path: out
+          retention-days: 14
+
+  outputs:
+    runs-on: ubuntu-24.04
+    container:
+      image: ghcr.io/kamranaghlami/hw-lab-ci:10.0.8
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      options: --user root
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # KiBot diff needs history
+      - name: KiBot
+        env:
+          # previous commit on push, base branch on PRs, parent otherwise
+          DIFF_OLD: ${{ github.event.pull_request.base.sha || (github.event.before != '0000000000000000000000000000000000000000' && github.event.before) || 'HEAD~1' }}
+        run: |
+          git config --global --add safe.directory "$PWD"
+          git config --global user.email ci@localhost && git config --global user.name ci
+          kibot -c hardware/hwlab.kibot.yaml -e $BOARD.kicad_sch -b $BOARD.kicad_pcb -d out -E DIFF_OLD=$DIFF_OLD
+          ls -R out | head -80
+      - uses: actions/upload-artifact@v4
+        with:
+          name: outputs
+          path: out
+          retention-days: 14
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/hw-v')
+    needs: [checks, outputs]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with: {path: dl}
+      - name: Package and publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -e
+          cd dl
+          zip -qr ../hwlab-$TAG-complete.zip outputs reports
+          cp outputs/fab/*_JLCPCB_compress*.zip ../hwlab-$TAG-jlcpcb-gerbers.zip
+          cp outputs/fab/*bom_jlc.csv ../hwlab-$TAG-jlcpcb-bom.csv
+          cp outputs/fab/*cpl_jlc.csv ../hwlab-$TAG-jlcpcb-cpl.csv
+          cd ..
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --title "$TAG" \
+            --notes "Fab package for $TAG ($GITHUB_SHA). JLCPCB: upload the gerbers zip, BOM and CPL." \
+            hwlab-$TAG-*.zip hwlab-$TAG-*.csv

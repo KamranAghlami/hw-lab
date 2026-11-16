@@ -1,0 +1,41 @@
+# Planted-mistakes experiment: which errors do ERC / DRC / pin-map catch?
+# Review material is uploaded under random codes so the agent can review it
+# before looking at the code -> variant mapping (in the `results` artifact).
+name: planted
+on: workflow_dispatch
+permissions:
+  contents: read
+  packages: read
+jobs:
+  setup:
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
+    steps:
+      - id: m
+        run: |
+          python3 - >> "$GITHUB_OUTPUT" <<'PY'
+          import json, random, string
+          vs = ["control", "swap_txrx", "missing_decap", "wrong_pinout", "floating_pin", "narrow_vbus"]
+          codes = random.sample([f"R{n:02d}" for n in range(10, 100)], len(vs))
+          print("matrix=" + json.dumps({"include": [{"variant": v, "code": c} for v, c in zip(vs, codes)]}))
+          PY
+  plant:
+    needs: setup
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+    container:
+      image: ghcr.io/kamranaghlami/hw-lab-ci:10.0.8
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      options: --user root
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 experiments/planted/plant.py ${{ matrix.variant }} /tmp/v > /dev/null 2>&1; mkdir -p res && cp /tmp/v/result.json res/${{ matrix.code }}.json
+      - uses: actions/upload-artifact@v4
+        with: {name: "review-${{ matrix.code }}", path: /tmp/v/review, retention-days: 7}
+      - uses: actions/upload-artifact@v4
+        with: {name: "result-${{ matrix.code }}", path: res, retention-days: 7}
