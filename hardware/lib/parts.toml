@@ -1,0 +1,156 @@
+# Atomic parts library: one symbol per orderable part.
+# `tools/build_lib.py` turns this into lib/hwlab.kicad_sym, lib/hwlab.pretty/ and
+# lib/3dmodels/, copying upstream KiCad library items at `upstream.tag` and baking
+# in Value, Footprint, MPN, Manufacturer and LCSC. The agent picks parts by name;
+# it never types a footprint or an LCSC number into the schematic.
+# LCSC numbers verified against the JLCPCB parts API on 2026-11-16
+# (basic = no JLC feeder fee; extended = fee per unique part).
+
+[upstream]
+tag = "10.0.8"
+
+# ---- power symbols (not BOM items) -----------------------------------------
+[[power]]
+symbol = "power:GND"
+[[power]]
+symbol = "power:+3V3"
+[[power]]
+symbol = "power:VBUS"
+[[power]]
+symbol = "power:PWR_FLAG"
+
+# ---- ICs / modules ------------------------------------------------------------
+[[part]]
+name = "ESP32-S3-WROOM-1-N8"
+symbol = "RF_Module:ESP32-S3-WROOM-1"
+footprint = "RF_Module:ESP32-S3-WROOM-1"
+manufacturer = "Espressif"
+mpn = "ESP32-S3-WROOM-1-N8"
+lcsc = "C2913198"  # extended
+
+[[part]]
+name = "AMS1117-3.3"
+symbol = "Regulator_Linear:AMS1117-3.3"
+footprint = "Package_TO_SOT_SMD:SOT-223-3_TabPin2"
+manufacturer = "Advanced Monolithic Systems"
+mpn = "AMS1117-3.3"
+lcsc = "C6186"  # basic
+
+[[part]]
+# No LSM6DSO symbol upstream; LSM6DSL/LSM6DS3 share the LGA-14L pinout.
+name = "LSM6DSOTR"
+symbol = "Sensor_Motion:LSM6DSL"
+footprint = "Package_LGA:LGA-14_3x2.5mm_P0.5mm_LayoutBorder3x4y"
+manufacturer = "STMicroelectronics"
+mpn = "LSM6DSOTR"
+lcsc = "C2655100"  # extended
+datasheet = "https://www.st.com/resource/en/datasheet/lsm6dso.pdf"
+description = "iNEMO 6DoF IMU, accelerometer + gyroscope, I2C/SPI/I3C, 1.71-3.6V, LGA-14L"
+pin_names = { "10" = "OCS_Aux", "11" = "SDO_Aux" }
+
+# ---- connectors / switches / LED -------------------------------------------
+[[part]]
+name = "USB_C_HRO_TYPE-C-31-M-12"
+symbol = "Connector:USB_C_Receptacle_USB2.0_16P"
+footprint = "Connector_USB:USB_C_Receptacle_HRO_TYPE-C-31-M-12"
+manufacturer = "Korean Hroparts Elec"
+mpn = "TYPE-C-31-M-12"
+lcsc = "C165948"  # extended
+
+[[part]]
+name = "JST_SH_SM04B-SRSS-TB"
+symbol = "Connector_Generic_MountingPin:Conn_01x04_MountingPin"
+footprint = "Connector_JST:JST_SH_SM04B-SRSS-TB_1x04-1MP_P1.00mm_Horizontal"
+manufacturer = "JST"
+mpn = "SM04B-SRSS-TB(LF)(SN)"
+lcsc = "C160404"  # extended
+
+[[part]]
+name = "SW_TS-1187A-B-A-B"
+symbol = "Switch:SW_Push"
+footprint = "Button_Switch_SMD:SW_Push_1P1T_XKB_TS-1187A"
+manufacturer = "XKB Connection"
+mpn = "TS-1187A-B-A-B"
+lcsc = "C318884"  # basic
+
+[[part]]
+name = "LED_Green_0805"
+symbol = "Device:LED"
+footprint = "LED_SMD:LED_0805_2012Metric"
+value = "Green"
+manufacturer = "Hubei KENTO Elec"
+mpn = "KT-0805G"
+lcsc = "C2297"  # basic
+
+# ---- passives -------------------------------------------------------------------
+[[part]]
+name = "R_1k_0402"
+symbol = "Device:R"
+footprint = "Resistor_SMD:R_0402_1005Metric"
+value = "1k"
+manufacturer = "UNI-ROYAL"
+mpn = "0402WGF1001TCE"
+lcsc = "C11702"  # basic
+
+[[part]]
+name = "R_4k7_0402"
+symbol = "Device:R"
+footprint = "Resistor_SMD:R_0402_1005Metric"
+value = "4.7k"
+manufacturer = "UNI-ROYAL"
+mpn = "0402WGF4701TCE"
+lcsc = "C25900"  # basic
+
+[[part]]
+name = "R_5k1_0402"
+symbol = "Device:R"
+footprint = "Resistor_SMD:R_0402_1005Metric"
+value = "5.1k"
+manufacturer = "UNI-ROYAL"
+mpn = "0402WGF5101TCE"
+lcsc = "C25905"  # basic
+
+[[part]]
+name = "R_10k_0402"
+symbol = "Device:R"
+footprint = "Resistor_SMD:R_0402_1005Metric"
+value = "10k"
+manufacturer = "UNI-ROYAL"
+mpn = "0402WGF1002TCE"
+lcsc = "C25744"  # basic
+
+[[part]]
+name = "C_100n_0402"
+symbol = "Device:C"
+footprint = "Capacitor_SMD:C_0402_1005Metric"
+value = "100n"
+manufacturer = "Samsung Electro-Mechanics"
+mpn = "CL05B104KO5NNNC"
+lcsc = "C1525"  # basic
+
+[[part]]
+name = "C_1u_0402"
+symbol = "Device:C"
+footprint = "Capacitor_SMD:C_0402_1005Metric"
+value = "1u"
+manufacturer = "Samsung Electro-Mechanics"
+mpn = "CL05A105KA5NQNC"
+lcsc = "C52923"  # basic
+
+[[part]]
+name = "C_10u_0603"
+symbol = "Device:C"
+footprint = "Capacitor_SMD:C_0603_1608Metric"
+value = "10u"
+manufacturer = "Samsung Electro-Mechanics"
+mpn = "CL10A106KP8NNNC"
+lcsc = "C19702"  # basic
+
+[[part]]
+name = "C_22u_0805"
+symbol = "Device:C"
+footprint = "Capacitor_SMD:C_0805_2012Metric"
+value = "22u"
+manufacturer = "Samsung Electro-Mechanics"
+mpn = "CL21A226MAQNNNE"
+lcsc = "C45783"  # basic

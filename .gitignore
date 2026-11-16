@@ -16,3 +16,4 @@ _autosave-*
 fp-info-cache
 *.bak
 \#auto_saved_files\#
+hardware/lib/.cache/

@@ -1,0 +1,4 @@
+(sym_lib_table
+	(version 7)
+	(lib (name "hwlab") (type "KiCad") (uri "${KIPRJMOD}/lib/hwlab.kicad_sym") (options "") (descr "hw-lab atomic parts (tools/build_lib.py)"))
+)

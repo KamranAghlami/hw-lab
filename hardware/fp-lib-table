@@ -1,0 +1,4 @@
+(fp_lib_table
+	(version 7)
+	(lib (name "hwlab") (type "KiCad") (uri "${KIPRJMOD}/lib/hwlab.pretty") (options "") (descr "hw-lab footprints (tools/build_lib.py)"))
+)
