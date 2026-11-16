@@ -19,7 +19,7 @@ MM = pcbnew.FromMM
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("board")
-    ap.add_argument("--pitch", type=float, default=4.0)
+    ap.add_argument("--pitch", type=float, default=6.0)
     ap.add_argument("--via", type=float, default=0.6)
     ap.add_argument("--drill", type=float, default=0.3)
     ap.add_argument("--clearance", type=float, default=0.3)
@@ -40,13 +40,18 @@ def main():
     r = a.via / 2 + a.clearance
     ring = [(r * math.cos(t), r * math.sin(t)) for t in [i * math.pi / 6 for i in range(12)]] + [(0, 0)]
     existing = [t.GetPosition() for t in b.GetTracks() if t.GetClass() == "PCB_VIA"]
+    holes = [p.GetPosition() for p in b.GetPads() if p.HasHole()]
+    texts = [d.GetBoundingBox() for d in b.GetDrawings() if d.GetClass() == "PCB_TEXT"]
     added = 0
     y = bb.GetTop() + MM(a.pitch / 2)
     while y < bb.GetBottom():
         x = bb.GetLeft() + MM(a.pitch / 2)
         while x < bb.GetRight():
             pts = [pcbnew.VECTOR2I(int(x + MM(dx)), int(y + MM(dy))) for dx, dy in ring]
-            near = any((p - pcbnew.VECTOR2I(int(x), int(y))).EuclideanNorm() < MM(a.pitch / 2) for p in existing)
+            c = pcbnew.VECTOR2I(int(x), int(y))
+            near = (any((p - c).EuclideanNorm() < MM(a.pitch / 2) for p in existing)
+                    or any((p - c).EuclideanNorm() < MM(1.5) for p in holes)
+                    or any(t.Inflate(MM(0.5)).Contains(c) for t in texts))
             if not near and all(fills[layer].Contains(p) for layer in fills for p in pts):
                 v = pcbnew.PCB_VIA(b)
                 v.SetPosition(pcbnew.VECTOR2I(int(x), int(y)))

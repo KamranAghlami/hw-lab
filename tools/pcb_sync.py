@@ -114,7 +114,7 @@ def add_gnd_pours(board, bcfg: dict, layers=("B.Cu",)):
         z.SetZoneName(f"GND_{name}")
         z.SetLocalClearance(MM(0.25))
         z.SetMinThickness(MM(0.2))
-        z.SetPadConnection(pcbnew.ZONE_CONNECTION_THERMAL)
+        z.SetPadConnection(pcbnew.ZONE_CONNECTION_THT_THERMAL)  # SMD solid, THT thermal
         z.SetThermalReliefGap(MM(0.3))
         z.SetThermalReliefSpokeWidth(MM(0.4))
         z.SetIslandRemovalMode(pcbnew.ISLAND_REMOVAL_MODE_ALWAYS)  # no floating copper islands
