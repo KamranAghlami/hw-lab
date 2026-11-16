@@ -151,6 +151,8 @@ def main() -> None:
     args = ap.parse_args()
     cfg = tomllib.loads((LIB / "parts.toml").read_text())
     tag = cfg["upstream"]["tag"]
+    global LIBNAME
+    LIBNAME = cfg.get("library", {}).get("name", LIBNAME)  # library nickname (sym/fp tables)
 
     symbols = []
     for pw in cfg.get("power", []):

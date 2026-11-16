@@ -74,6 +74,8 @@ def main():
     anchors = [t.GetPosition() for t in b.GetTracks() if t.GetClass() == "PCB_VIA"] + holes
     top = fills[pcbnew.F_Cu]
     island_fix = 0
+    r2 = 0.25 + 0.2  # smaller via (0.5/0.25 mm, inside JLC limits) for narrow islands
+    ring = [(r2 * math.cos(t), r2 * math.sin(t)) for t in [i * math.pi / 8 for i in range(16)]] + [(0, 0)]
     for i in range(top.OutlineCount()):
         outline = top.Outline(i)
         if any(outline.PointInside(p) for p in anchors):
@@ -88,12 +90,12 @@ def main():
                 if all(outline.PointInside(p) for p in pts) and all(fills[pcbnew.B_Cu].Contains(p) for p in pts) \
                         and not any((p - pts[-1]).EuclideanNorm() < MM(1.5) for p in holes):
                     v = pcbnew.PCB_VIA(b)
-                    v.SetPosition(pts[-1]); v.SetWidth(MM(a.via)); v.SetDrill(MM(a.drill)); v.SetNet(gnd)
+                    v.SetPosition(pts[-1]); v.SetWidth(MM(0.5)); v.SetDrill(MM(0.25)); v.SetNet(gnd)
                     b.Add(v)
                     island_fix += 1
                     placed = True
-                xx += MM(0.5)
-            yy += MM(0.5)
+                xx += MM(0.25)
+            yy += MM(0.25)
     filler.Fill(b.Zones())
     pcbnew.SaveBoard(a.board, b)
     print(f"stitching vias added: {added} grid + {island_fix} island")

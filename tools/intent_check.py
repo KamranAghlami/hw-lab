@@ -72,9 +72,9 @@ def main() -> int:
             continue
         table = p.get("datasheet_pins", {})
         if table:
-            fp = c["footprint"].split(":")[1]
+            libnick, fp = c["footprint"].split(":")
             if fp not in pads_cache:
-                tree = k.load(a.lib / "hwlab.pretty" / f"{fp}.kicad_mod")
+                tree = k.load(a.lib / f"{libnick}.pretty" / f"{fp}.kicad_mod")
                 pads_cache[fp] = {str(pd[1]) for pd in k.children(tree, "pad")}
             for pad, names in table.items():
                 ok_names = {norm(x) for x in names.split("|")}
