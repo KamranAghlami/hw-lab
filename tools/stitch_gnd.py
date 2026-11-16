@@ -94,7 +94,9 @@ def main():
             while xx < bbx.GetRight() and not placed:
                 pts = [pcbnew.VECTOR2I(int(xx + MM(dx)), int(yy + MM(dy))) for dx, dy in ring]
                 if all(outline.PointInside(p) for p in pts) and all(fills[pcbnew.B_Cu].Contains(p) for p in pts) \
-                        and not any((p - pts[-1]).EuclideanNorm() < MM(1.5) for p in holes):
+                        and not any((p - pts[-1]).EuclideanNorm() < MM(1.5) for p in holes) \
+                        and not any((t.GetPosition() - pts[-1]).EuclideanNorm() < MM(1.2)
+                                    for t in b.GetTracks() if t.GetClass() == "PCB_VIA"):
                     v = pcbnew.PCB_VIA(b)
                     v.SetPosition(pts[-1]); v.SetWidth(MM(0.5)); v.SetDrill(MM(0.25)); v.SetNet(gnd)
                     b.Add(v)

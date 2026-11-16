@@ -78,6 +78,8 @@ def main():
     def limit(v):
         return a.decap_mm if v in ("100n", "1u") else 10.0
     bad = [x for x in bound if x[2] is None or x[3] > limit(x[1])]
+    if not reqs and any(p.get("decap") for p in parts.values()):
+        bad = ["no decap requirement matched any footprint (pad pin functions or MPN fields missing?)"]
     add("decap", not bad, "pin<-cap mm: " + ", ".join(f"{p}<-{c}({v}) {d}" for p, v, c, d in bound)
         + f"; limits {a.decap_mm} mm (<=1u) / 10 mm (bulk); violations: {bad}")
 

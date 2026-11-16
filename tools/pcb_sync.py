@@ -32,7 +32,7 @@ MM = pcbnew.FromMM
 
 def read_netlist(path: Path):
     t = k.load(path)
-    comps, pins = {}, {}
+    comps, pins, pinfo = {}, {}, {}
     for c in k.children(k.find(t, "components"), "comp"):
         ref = str(k.find(c, "ref")[1])
         fields = {}
@@ -55,8 +55,15 @@ def read_netlist(path: Path):
     for n in k.children(k.find(t, "nets"), "net"):
         name = str(k.find(n, "name")[1])
         for node in k.children(n, "node"):
-            pins[(str(k.find(node, "ref")[1]), str(k.find(node, "pin")[1]))] = name
-    return comps, pins
+            key = (str(k.find(node, "ref")[1]), str(k.find(node, "pin")[1]))
+            pins[key] = name
+            fn = k.find(node, "pinfunction")
+            fn = str(fn[1]) if fn else ""
+            if fn.endswith("_" + key[1]):  # KiCad 10 netlists write NAME_NUMBER
+                fn = fn[: -len(key[1]) - 1]
+            ty = k.find(node, "pintype")
+            pinfo[key] = (fn, str(ty[1]) if ty else "")
+    return comps, pins, pinfo
 
 
 def outline_of(bcfg: dict) -> tuple[float, float, float, float, float]:
@@ -178,7 +185,7 @@ def main():
     ap.add_argument("--lib", type=Path, default=Path(__file__).resolve().parents[1] / "hardware/lib")
     a = ap.parse_args()
 
-    comps, pins = read_netlist(a.netlist)
+    comps, pins, pinfo = read_netlist(a.netlist)
     place = tomllib.loads(a.placement.read_text()) if a.placement else {"parts": {}, "board": {}}
     created = not a.board.exists()
     board = new_board(place["board"]) if created else pcbnew.LoadBoard(str(a.board))
@@ -218,6 +225,9 @@ def main():
         set_fields(fp, comp)
         for pad in fp.Pads():
             net = pins.get((ref, pad.GetNumber()))
+            fn, ty = pinfo.get((ref, pad.GetNumber()), ("", ""))
+            pad.SetPinFunction(fn)  # as KiCad's Update PCB does; layout checks rely on it
+            pad.SetPinType(ty)
             pad.SetNet(board.FindNet(net) if net else board.FindNet(""))
             if net is None and pad.GetNumber():
                 pad.SetNetCode(0)
