@@ -24,6 +24,6 @@ jobs:
         with:
           context: ci
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/hw-lab-ci:10.0.8
+          tags: ghcr.io/kamranaghlami/hw-lab-ci:10.0.8
           cache-from: type=gha
           cache-to: type=gha,mode=max
