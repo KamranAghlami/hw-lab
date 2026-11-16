@@ -21,7 +21,10 @@ All numbers below come from runs in this repo (`gh run view <id>`) unless stated
   edit it in the GUI); the PCB is human-owned (the agent edits it surgically and DRC checks the result).
 - **CI:** ~1 min for checks + ~1.5 min for outputs, in parallel. The prebuilt image on GHCR is the
   cache; pulling it (~40–60 s per job) is now the dominant cost.
-- **Not yet done:** a real GUI round trip by the owner (§2.3), a truly blind review (§4.4).
+- **Agent layout (Q7):** a credit-card board (ID-1, rounded corners) from agent placement +
+  Freerouting passes all gates; it misses USB pair routing and silk polish (§7).
+- **Release:** `hw-v0.1` published with the full fab package (§6).
+- **Not yet done:** a real GUI round trip by the owner (§2.3), a truly blind review (§4.2).
 
 ---
 
@@ -115,9 +118,10 @@ CPL, interactive HTML BOM (with LCSC/MPN), orthographic top/bottom 3D PNGs, STEP
 schematic diffs against the previous commit (PDF), 2D top/bottom layout PNGs (`kicad-cli` SVG →
 `rsvg-convert`).
 
-**Timings** (public-repo runner, run 43871171199): checks 54 s, outputs 80 s, in parallel.
-Container init (image pull) 38–44 s per job; ERC + DRC + all checks ~3 s; KiBot ~35 s. On the
-private repo the pull took ~61 s (run 43868081556: checks 72 s, outputs 121 s).
+**Timings** (public-repo runner, card board, run 43875965287): checks 37 s, outputs 80 s, in
+parallel. Container init (image pull) 26–44 s per job; all gates together ~6 s; KiBot ~43 s.
+On the private repo the pull took ~61 s (run 43868081556: checks 72 s, outputs 121 s). Release
+run (tag → GitHub release): ~4 min including the full pipeline.
 
 **Cache strategy:** a derived image `ghcr.io/kamranaghlami/hw-lab-ci:10.0.8` (KiCad + KiBot +
 iBOM + KiDiff + ImageMagick + rsvg + Java/Freerouting), rebuilt only when `ci/Dockerfile`
@@ -131,7 +135,8 @@ bills ~3–4 private minutes and the planted matrix ~14. hw-lab was made public 
 2026-11-16 (owner's call) so its runs are free; the private tracker repo needs this frugality.
 
 **CI/tool gotchas hit** (also in `docs/memory/kicad10-gotchas.md`): KiBot must be installed with
-`pip --no-compile` and needs `lxml numpy svgwrite mistune`; GHCR image names must be lowercase;
+`pip --no-compile`, needs `lxml numpy svgwrite mistune`, and must be given
+`generate_interactive_bom.py` or it downloads iBOM at run time; GHCR image names must be lowercase;
 Freerouting ≥2.5 needs Java 25 (pin 2.1.0 on Debian 13); the official 3D library at 10.0.8 lacks
 the HRO USB-C and XKB button models; KiBot's `step` output → use `export_3d`; 3D renders with
 `zoom: 1` crop the board → use `orthographic` + `auto_crop`.
@@ -188,11 +193,56 @@ nets are prefixed `/`.
 
 `release.yml` on `hw-v*` tags calls `hardware.yml` (`workflow_call`), then attaches
 `hwlab-<tag>-complete.zip` (all outputs + reports), the JLCPCB gerber/drill zip, BOM and CPL.
-RELEASE_RESULT
+**Verified:** tag `hw-v0.1` → https://github.com/KamranAghlami/hw-lab/releases/tag/hw-v0.1 (run
+43876354780) with `hwlab-hw-v0.1-complete.zip` (1.7 MB), `-jlcpcb-gerbers-drill.zip` (11 gerber/drill
+files, Protel extensions), `-jlcpcb-bom.csv` (21 parts, all with LCSC numbers) and `-jlcpcb-cpl.csv`.
+The first attempt failed: KiBot didn't use the pip-installed iBOM and tried to **download**
+`generate_interactive_bom.py` from GitHub at run time. Fixed in the image (a symlink to the
+pinned install); the re-run passed with no downloads. KiBot also applies JLC rotation offsets on
+its own (SOT-223 and USB-C +180° in the CPL). They look right, but check JLC's assembly preview
+before the first order. Still downloaded at run time (optional, warning only): the two 3D models
+missing upstream, which KiBot fetches from EasyEDA by LCSC number. Commit them to
+`lib/3dmodels-extra/` for a hermetic build.
 
 ## 7. Agent placement and routing (owner-requested experiment)
 
-LAYOUT_RESULT
+The owner asked for "aesthetically plausible, credit-card form factor, rounded corners". So:
+ISO/IEC 7810 ID-1, 85.60 × 53.98 mm, r = 3.18 mm (`placement.toml [board]`). The agent wrote the
+placement from stated rules; Freerouting 2.1.0 routed; `tools/stitch_gnd.py` stitched the
+pours. The result is committed as the board (ee75d58); CI run 43875965287 is green.
+
+| checklist item (agreed before scoring) | agent self-score | evidence |
+|---|---|---|
+| decoupling: each required cap bound to its pin, 100n ≤ 3 mm, bulk ≤ 10 mm (**CI gate**) | pass | U1.3V3←C3 1.92 mm, U3.VDD←C6 2.06, U3.VDDIO←C5 2.73, U2.VI←C1 3.8, U2.VO←C2 ≤10 |
+| connectors flush on edges (**gate**) | pass | J1 0.15 mm, J2 0.22 mm from the edge |
+| antenna at the edge, keep-out on both layers, no copper under it (**gate**) | pass | antenna end 0.03 mm from the edge; footprint keep-out zone on F.Cu + B.Cu |
+| functional grouping (power / MCU / IMU / UI) | pass | LDO + bulk caps between USB-C and the module; IMU mid-board, ~20 mm from the LDO |
+| USB as a short coupled pair | **fail** | D+/D− go to B.Cu through 4 vias and run ~45 mm, not coupled. Freerouting has no diff-pair routing; OK for 12 Mbit/s but not the intent |
+| power widths per class | pass | VBUS ≥ 0.4 mm enforced by a `.kicad_dru` error rule; +3V3 0.25 mm |
+| tracks at 45° only | pass | 0/167 segments off-angle |
+| rotations 0/90, parts inside the outline | pass | measured |
+| designators readable and off pads | **fail** | J1's designator sits on its pads; the C5/C6 and R3/C4 labels are crowded |
+| GND pour on both layers except under the antenna | pass with a waiver | 3 tiny top-pour slivers that no via fits → waived as an owner GUI task |
+| silk: title + hash, J2 pinout, RST/BOOT, ANT | pass | `${GIT_HASH}` filled in by KiBot (`ee75d58` on the board) |
+| mounting holes | not done | optional; would need board-only footprints |
+| 0 unwaived DRC errors | pass | |
+
+How it got there: 8 bootstrap iterations (probe runs 43869781009 … 43875708944), each fixing
+something the measurements showed:
+- a silk text on an undefined layer (KiCad 10 calls it `F.Silkscreen`; `F.SilkS` returns −1);
+- +3V3 at 0.3 mm can't escape a 0.5 mm-pitch LGA → 0.25 mm;
+- top-pour islands → grid stitching plus a per-island pass with island removal off during stitching;
+- starved thermals on tiny pads → solid SMD connections, thermal reliefs for THT only;
+- courtyard and silk collisions;
+- my own decap gate passing **vacuously** (`pcb_sync` didn't set pad pin functions). It now fails when it finds nothing to check.
+
+Freerouting takes 6–8 s per run on this board.
+
+**What this says about agent layout:** an agent can produce a DRC-clean, measurably reasonable
+2-layer layout for a small board if the rules are written down and measured. It needed
+iterations, and it misses what the autorouter can't express (differential pairs, RF/return-path
+judgement, silk aesthetics). The owner's GUI review scored against the same checklist is the
+missing half of this experiment (§2.3 session).
 
 ## Recommended toolchain
 
@@ -236,5 +286,8 @@ ci/Dockerfile                 CI image
 1. Owner's GUI round trip (§2.3) and removing the bootstrap waiver it resolves.
 2. Truly blind review with a fresh subagent (§4.2).
 3. Hierarchical sheets in `schgen` for the larger tracker board.
-4. PCB-level decap distance as a gate (today it's in the layout checklist only).
+4. Hand-route USB as a coupled pair (Freerouting can't); score the owner's GUI version on the §7 checklist.
 5. Merge the CI jobs to pull the image once, if serialising is acceptable on the private repo.
+6. Commit the two EasyEDA-sourced 3D models so builds never download anything.
+7. Add "copper intruding into the antenna keep-out" to the planted set; mounting holes for the card.
+8. Commit KiCad's own expansion of `hwlab.kicad_pro` (the first GUI save will rewrite it).

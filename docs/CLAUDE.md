@@ -17,9 +17,19 @@ is built later in another repo using what is learned here.
   `LCSC` fields.
 - Project docs and memory live in `docs/` (memory index: `docs/memory/MEMORY.md`).
 
-## Layout
+## Layout and workflow
 
-See `docs/findings.md` § "Repo layout" for the annotated tree.
+See `docs/findings.md` (§ "Recommended repo layout") for the annotated tree. In short:
+
+- Schematic: edit `hardware/design.py`, run `./venv/bin/python hardware/design.py`, commit the
+  generated `hardware/hwlab.kicad_sch` (CI fails if it is stale). Never hand-edit the `.kicad_sch`.
+- Parts: add to `hardware/lib/parts.toml` (MPN, LCSC verified, datasheet_pins, decap), then
+  `./venv/bin/python tools/build_lib.py`.
+- PCB: human-owned (KiCad GUI). Agent edits go through `tools/kisexpr.py` and are always followed
+  by DRC in CI. `tools/pcb_sync.py` = headless "Update PCB from Schematic" (runs in CI only).
+- Gates (hardware.yml): regen, `sch_overlap.py`, ERC + `waivers.toml`, `pinmap.py`,
+  `intent_check.py`, DRC + `hwlab.kicad_dru`, `layout_check.py --gate`.
+- Release: push a `hw-vX.Y` tag.
 
 ## Common commands
 
