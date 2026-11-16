@@ -10,10 +10,10 @@ rm -f hwlab.kicad_pcb
 python3 ../tools/pcb_sync.py /tmp/hwlab.net hwlab.kicad_pcb --placement placement.toml || exit 1
 cp hwlab.kicad_pcb $o/placed.kicad_pcb
 kicad-cli pcb drc --severity-all -o $o/drc-placed.rpt hwlab.kicad_pcb; grep -E "^\[|Found|\*\*" $o/drc-placed.rpt | sort | uniq -c | sort -rn | head -30
-kicad-cli pcb render --side top -w 1200 -h 1600 -o $o/placed-top.png hwlab.kicad_pcb
+kicad-cli pcb render --side top -w 1600 -h 1100 -o $o/placed-top.png hwlab.kicad_pcb
 # --- autoroute
 t0=$(date +%s)
-apt-get update -qq && apt-get install -y -qq openjdk-21-jre-headless curl >/dev/null 2>&1
+apt-get update -qq && apt-get install -y -qq openjdk-21-jre-headless curl librsvg2-bin >/dev/null 2>&1
 url=https://github.com/freerouting/freerouting/releases/download/v2.1.0/freerouting-2.1.0.jar
 echo "freerouting: $url"; curl -sL -o /tmp/fr.jar "$url"
 echo "java+freerouting install $(( $(date +%s) - t0 ))s"
@@ -32,6 +32,12 @@ print('tracks', len(b.GetTracks()))
 PY
 cp hwlab.kicad_pcb $o/routed.kicad_pcb
 kicad-cli pcb drc --severity-all --schematic-parity -o $o/drc-routed.rpt hwlab.kicad_pcb; grep -E "^\[|Found|\*\*" $o/drc-routed.rpt | sort | uniq -c | sort -rn | head -30
-kicad-cli pcb render --side top -w 1200 -h 1600 -o $o/routed-top.png hwlab.kicad_pcb
-kicad-cli pcb export svg --layers F.Cu,B.Cu,Edge.Cuts,F.SilkS --mode-single -o $o/routed.svg hwlab.kicad_pcb
+kicad-cli pcb render --side top -w 1600 -h 1100 -o $o/routed-top.png hwlab.kicad_pcb
+for side in top bottom; do
+  if [ $side = top ]; then L=F.Cu,F.Mask,F.Silkscreen,Edge.Cuts; M=; else L=B.Cu,B.Mask,B.Silkscreen,Edge.Cuts; M=--mirror; fi
+  kicad-cli pcb export svg --mode-single --fit-page-to-board --exclude-drawing-sheet $M --layers $L -o $o/layout-$side.svg hwlab.kicad_pcb
+  rsvg-convert -w 2400 -b white $o/layout-$side.svg -o $o/layout-$side.png
+done
+kicad-cli pcb render --side bottom -w 1600 -h 1100 -o $o/routed-bottom.png hwlab.kicad_pcb
+python3 ../tools/layout_check.py hwlab.kicad_pcb --json $o/layout-check.json
 true

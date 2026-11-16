@@ -82,7 +82,14 @@ jobs:
           git config --global --add safe.directory "$PWD"
           git config --global user.email ci@localhost && git config --global user.name ci
           kibot -c hardware/hwlab.kibot.yaml -e $BOARD.kicad_sch -b $BOARD.kicad_pcb -d out -E DIFF_OLD=$DIFF_OLD
-          ls -R out | head -80
+      - name: 2D layout plots (top / bottom PNG)
+        run: |
+          mkdir -p out/img
+          kicad-cli pcb export svg --mode-single --fit-page-to-board --exclude-drawing-sheet \
+            --layers F.Cu,F.Mask,F.Silkscreen,Edge.Cuts -o out/img/layout-top.svg $BOARD.kicad_pcb
+          kicad-cli pcb export svg --mode-single --fit-page-to-board --exclude-drawing-sheet --mirror \
+            --layers B.Cu,B.Mask,B.Silkscreen,Edge.Cuts -o out/img/layout-bottom.svg $BOARD.kicad_pcb
+          for f in out/img/layout-*.svg; do rsvg-convert -w 2400 -b white "$f" -o "${f%.svg}.png"; done
       - uses: actions/upload-artifact@v4
         with:
           name: outputs

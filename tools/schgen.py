@@ -158,9 +158,11 @@ class Design:
     def build(self) -> list:
         items: list[tuple[int, str, list]] = []  # (type order, uuid, node)
         used: dict[str, LibSym] = {}
+        spans: dict[str, tuple[int, int]] = {}
         for ref, part in sorted(self.parts.items()):
             used[part.sym.name] = part.sym
             items.append((ORDER["symbol"], uid("sym", ref), self._symbol(part, ref)))
+            start = len(items)
             # 1) one entry per distinct connection point (stacked pins collapse)
             points: dict[tuple[float, float], tuple[Pin, str | None]] = {}
             for pin in part.sym.pins:
@@ -223,6 +225,8 @@ class Design:
                         S("uuid", uid("junction", ref, *e)))))
                 # one power symbol for the whole run, at its first end, pointing outward
                 items.append((ORDER["symbol"], uid("pwr", *key), self._power(net, ends[0], d, key)))
+            spans[ref] = (start, len(items))
+        self._check_collisions(items, spans)
         items.sort(key=lambda t: (t[0], t[1]))
         lib_symbols = [self._lib_symbol(s) for _, s in sorted(used.items())]
         title = S("title_block")
@@ -236,6 +240,24 @@ class Design:
                  S("generator_version", "10.0"), S("uuid", self.root), S("paper", self.paper), title,
                  S("lib_symbols", *lib_symbols), *[n for _, _, n in items],
                  S("sheet_instances", S("path", "/", S("page", "1"))), S("embedded_fonts", Sym("no")))
+
+    @staticmethod
+    def _check_collisions(items, spans) -> None:
+        """Refuse layouts where one part's pins/stubs/labels land on another part's
+        connection points: in KiCad that silently merges nets (a short)."""
+        owner: dict[tuple, str] = {}
+        clashes = []
+        for ref, (lo, hi) in spans.items():
+            for _, _, node in items[lo:hi]:
+                h = k.head(node)
+                pts = [xy[1:3] for xy in k.find(node, "pts")[1:]] if h == "wire" else [k.find(node, "at")[1:3]]
+                for pt in pts:
+                    key = (round(float(pt[0]), 3), round(float(pt[1]), 3))
+                    if owner.setdefault(key, ref) != ref:
+                        clashes.append(f"{owner[key]}/{ref} at {key}")
+        if clashes:
+            raise ValueError("connection points shared by different parts (KiCad would merge their nets): "
+                             + "; ".join(sorted(set(clashes))[:10]))
 
     def write(self, path: Path) -> None:
         k.dump(self.build(), path)

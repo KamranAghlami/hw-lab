@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+"""Measured layout checklist (runs in CI with pcbnew). Prints a scored table.
+
+    layout_check.py hardware/hwlab.kicad_pcb [--decap-mm 3] [--json out.json]
+
+Checks (each PASS/FAIL with the numbers behind it):
+  decap      every capacitor on +3V3 has a pad within N mm of an IC power pad on +3V3
+  edges      USB-C (J1) and debug port (J2) touch the board edge (<= 1 mm)
+  antenna    U1's antenna end is at the board edge (<= 0.5 mm)
+  inside     every footprint's pads lie inside the outline
+  rotations  all footprints at multiples of 90 degrees
+  angles     all track segments at multiples of 45 degrees
+  vias       via count (informational)
+Exit code is 0 always; this is a score, the DRC gate is separate.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import math
+
+import pcbnew
+
+MM = pcbnew.ToMM
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("board")
+    ap.add_argument("--decap-mm", type=float, default=3.0)
+    ap.add_argument("--json")
+    a = ap.parse_args()
+    b = pcbnew.LoadBoard(a.board)
+    edge = b.GetBoardEdgesBoundingBox()
+    ex1, ey1, ex2, ey2 = MM(edge.GetLeft()), MM(edge.GetTop()), MM(edge.GetRight()), MM(edge.GetBottom())
+    fps = {fp.GetReference(): fp for fp in b.GetFootprints()}
+    res = []
+
+    def add(name, ok, detail):
+        res.append({"check": name, "pass": bool(ok), "detail": detail})
+
+    # decap distance
+    ic_pads = [p for r, fp in fps.items() if r.startswith("U") for p in fp.Pads()
+               if p.GetNetname() == "+3V3" and p.GetPinType() in ("power_in", "power_out")]
+    worst = []
+    for r, fp in sorted(fps.items()):
+        if not r.startswith("C"):
+            continue
+        cp = [p for p in fp.Pads() if p.GetNetname() == "+3V3"]
+        if not cp or not ic_pads:
+            continue
+        d = min(MM((p.GetPosition() - q.GetPosition()).EuclideanNorm()) for p in cp for q in ic_pads)
+        worst.append((r, round(d, 2)))
+    far = [w for w in worst if w[1] > a.decap_mm]
+    add("decap", not far, f"distances {worst}; > {a.decap_mm} mm: {far}")
+
+    # connectors / antenna at edges
+    def edge_gap(fp):
+        bb = fp.GetBoundingBox(False)
+        return round(min(abs(MM(bb.GetLeft()) - ex1), abs(ex2 - MM(bb.GetRight())),
+                         abs(MM(bb.GetTop()) - ey1), abs(ey2 - MM(bb.GetBottom()))), 2)
+    gaps = {r: edge_gap(fps[r]) for r in ("J1", "J2") if r in fps}
+    add("edges", all(g <= 1.0 for g in gaps.values()), f"edge gap mm {gaps}")
+    if "U1" in fps:
+        u1 = fps["U1"]
+        # antenna end = module body edge on the side the antenna points to (local -y)
+        ang = math.radians(u1.GetOrientationDegrees())
+        c = u1.GetPosition()
+        tip = (MM(c.x) - 12.75 * math.sin(ang), MM(c.y) - 12.75 * math.cos(ang))
+        gap = round(min(abs(tip[0] - ex1), abs(ex2 - tip[0]), abs(tip[1] - ey1), abs(ey2 - tip[1])), 2)
+        add("antenna", gap <= 0.5, f"antenna end {tuple(round(v, 2) for v in tip)}, gap to edge {gap} mm")
+    # inside outline
+    outside = [r for r, fp in fps.items() for p in fp.Pads()
+               if not (ex1 <= MM(p.GetPosition().x) <= ex2 and ey1 <= MM(p.GetPosition().y) <= ey2)]
+    add("inside", not outside, f"pads outside: {sorted(set(outside))}")
+    rots = {r: fp.GetOrientationDegrees() for r, fp in fps.items() if round(fp.GetOrientationDegrees()) % 90}
+    add("rotations", not rots, f"non-90 rotations: {rots}")
+    bad = 0
+    n = 0
+    vias = 0
+    for t in b.GetTracks():
+        if t.GetClass() == "PCB_VIA":
+            vias += 1
+            continue
+        if t.GetClass() != "PCB_TRACK":
+            continue
+        n += 1
+        dx, dy = t.GetEnd().x - t.GetStart().x, t.GetEnd().y - t.GetStart().y
+        if dx == 0 and dy == 0:
+            continue
+        deg = math.degrees(math.atan2(dy, dx)) % 45
+        if min(deg, 45 - deg) > 0.5:
+            bad += 1
+    add("angles", bad == 0, f"{bad}/{n} segments not at 45-degree multiples")
+    add("vias", True, f"{vias} vias")
+
+    score = sum(r["pass"] for r in res if r["check"] != "vias")
+    total = len([r for r in res if r["check"] != "vias"])
+    for r in res:
+        print(f"  {'PASS' if r['pass'] else 'FAIL'}  {r['check']:<10} {r['detail']}")
+    print(f"layout checklist: {score}/{total}")
+    if a.json:
+        json.dump({"score": score, "total": total, "checks": res}, open(a.json, "w"), indent=2)
+
+
+if __name__ == "__main__":
+    main()

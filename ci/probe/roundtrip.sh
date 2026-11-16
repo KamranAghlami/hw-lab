@@ -27,8 +27,8 @@ t=open('hwlab.kicad_sch').read(); print('sch byte-identical:', k.dumps(k.parse(t
 echo "=== B agent adds a test LED (D2 + R7 on IO39) via design.py"
 cat >> design.py <<'EOF'
 
-d.part("R7", "R_1k_0402", (241.3, 101.6), **{"1": "LED2", "2": "LED2_A"})
-d.part("D2", "LED_Green_0805", (256.54, 101.6), A="LED2_A", K="GND")
+d.part("R7", "R_1k_0402", (241.3, 83.82), **{"1": "LED2", "2": "LED2_A"})
+d.part("D2", "LED_Green_0805", (264.16, 83.82), A="LED2_A", K="GND")
 d.parts["U1"].nets[next(p.number for p in d.parts["U1"].sym.pins if p.name == "IO39")] = "LED2"
 d.parts["U1"].nc.discard(next(p.number for p in d.parts["U1"].sym.pins if p.name == "IO39"))
 if __name__ == "__main__":

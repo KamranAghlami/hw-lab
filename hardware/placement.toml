@@ -1,30 +1,69 @@
-# Initial placement (mm, board coordinates; rot in degrees CCW; side F/B).
-# Used by tools/pcb_sync.py ONLY when a footprint is first added to the board.
-# After that the owner moves parts in the KiCad GUI and the .kicad_pcb is the
-# source of truth for positions; this file is never re-applied.
+# Agent-written placement for the credit-card layout (experiment Q7).
+# Used by tools/pcb_sync.py ONLY when a footprint is first added (or the board is
+# created). After that the .kicad_pcb is the source of truth for positions.
+# Coordinates: mm, KiCad board space; rot = degrees CCW.
+#
+# Layout rules the agent followed (scored in docs/experiments/layout-checklist.md):
+#  - ESP32-S3 antenna flush with the LEFT short edge, keep-out inside the outline
+#  - USB-C mouth on the RIGHT short edge; LDO + bulk caps between USB-C and the module
+#  - decoupling within ~3 mm of the pin it serves; IMU mid-board, away from the LDO
+#  - JST-SH debug port on the TOP edge, buttons on the BOTTOM edge, LED near top-right
+#  - passives on a 0.5 mm grid, rotations 0/90 only
 
 [board]
-outline = [100.0, 100.0, 140.0, 160.0]  # x1 y1 x2 y2, 40 x 60 mm
+# ISO/IEC 7810 ID-1 card
+origin = [100.0, 100.0]
+width = 85.60
+height = 53.98
+corner_radius = 3.18
+gnd_pour_layers = ["F.Cu", "B.Cu"]
 
 [parts]
-U1  = [120.0, 112.75, 0]    # antenna flush with the top edge
-J1  = [120.0, 155.5, 0]     # USB-C mouth on the bottom edge
-R1  = [113.5, 151.0, 90]
-R2  = [126.5, 151.0, 90]
-U2  = [107.0, 148.0, 0]
-C1  = [103.0, 155.5, 90]
-C2  = [110.5, 155.5, 90]
-C3  = [104.0, 130.0, 90]
-C7  = [107.0, 130.0, 90]
-R3  = [113.0, 131.0, 90]
-C4  = [116.0, 131.0, 90]
-SW2 = [106.0, 138.5, 0]
-SW1 = [134.0, 138.5, 0]
-U3  = [120.0, 139.0, 0]
-C5  = [116.5, 139.0, 90]
-C6  = [123.5, 139.0, 90]
-R4  = [124.0, 131.0, 90]
-R5  = [127.0, 131.0, 90]
-R6  = [131.0, 130.5, 0]
-D1  = [135.0, 130.5, 0]
-J2  = [135.5, 149.0, 90]
+# module, rotated so the antenna points left; body spans x 100..125.5, y 118..136
+U1  = [112.75, 126.99, 90]
+C3  = [108.5, 139.5, 90]     # 100n at 3V3 pin 2 (108.76, 135.74)
+C7  = [110.5, 139.5, 90]     # 10u bulk at the module
+R3  = [113.0, 139.5, 90]     # EN pull-up, EN = pin 3 (110.03, 135.74)
+C4  = [115.0, 139.5, 90]     # EN RC
+# USB-C on the right edge, mouth right
+J1  = [181.6, 126.99, 90]
+R1  = [175.0, 121.0, 0]
+R2  = [175.0, 133.0, 0]
+# LDO block between USB and module
+U2  = [166.0, 112.0, 0]
+C1  = [160.5, 116.5, 0]      # 10u on VBUS (LDO in)
+C2  = [171.5, 116.5, 0]      # 22u on +3V3 (LDO out)
+# IMU mid-board
+U3  = [146.0, 127.0, 0]
+C5  = [142.5, 127.0, 90]
+C6  = [149.5, 127.0, 90]
+R4  = [144.0, 121.5, 0]
+R5  = [148.0, 121.5, 0]
+# UI
+SW2 = [130.0, 148.5, 0]      # RESET, bottom edge
+SW1 = [142.0, 148.5, 0]      # BOOT, bottom edge
+R6  = [150.0, 104.0, 0]
+D1  = [154.5, 104.0, 0]      # LED, top edge
+J2  = [136.0, 103.5, 180]    # debug UART, mouth up through the top edge
+
+[[silk]]
+text = "hw-lab ESP32-S3 rev 0.1 ${GIT_HASH}"
+at = [162.0, 149.5]
+size = 1.2
+
+[[silk]]
+text = "RST"
+at = [130.0, 144.6]
+
+[[silk]]
+text = "BOOT"
+at = [142.0, 144.6]
+
+[[silk]]
+text = "GND 3V3 TX RX"
+at = [136.0, 107.9]
+size = 0.8
+
+[[silk]]
+text = "ANT"
+at = [103.0, 126.99]

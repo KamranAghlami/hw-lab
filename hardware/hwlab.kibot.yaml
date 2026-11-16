@@ -51,20 +51,14 @@ outputs:
     comment: 3D render, top
     type: render_3d
     dir: img
-    options: {view: top, ray_tracing: false, width: 1600, height: 2000, zoom: 1}
+    # review view: orthographic, whole board, trimmed to the board
+    options: {view: top, orthographic: true, zoom: 0, auto_crop: true, ray_tracing: false, width: 2400, height: 1600}
 
   - name: render_bottom
     comment: 3D render, bottom
     type: render_3d
     dir: img
-    options: {view: bottom, ray_tracing: false, width: 1600, height: 2000, zoom: 1}
-
-  - name: render_iso
-    comment: 3D render, isometric
-    type: render_3d
-    dir: img
-    output: '%f-3D_iso.%x'
-    options: {view: top, rotate_x: 3, rotate_z: -2, ray_tracing: false, width: 1600, height: 1200}
+    options: {view: bottom, orthographic: true, zoom: 0, auto_crop: true, ray_tracing: false, width: 2400, height: 1600}
 
   - name: step
     comment: STEP model of the assembly (KiBot recommends export_3d on KiCad 9+)

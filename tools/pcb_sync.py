@@ -12,7 +12,7 @@ job with the pcbnew API:
   - footprints whose symbol was removed are deleted;
   - every pad gets the net from the netlist.
 If the board does not exist yet it is created with the outline from placement.toml
-and a GND pour on both layers. Footprint-to-symbol linking uses the symbol UUID,
+(rectangle or rounded card), GND pours and silkscreen texts. Footprint-to-symbol linking uses the symbol UUID,
 which tools/schgen.py keeps stable, so this is safe to re-run.
 """
 from __future__ import annotations
@@ -59,37 +59,83 @@ def read_netlist(path: Path):
     return comps, pins
 
 
-def new_board(outline):
+def outline_of(bcfg: dict) -> tuple[float, float, float, float, float]:
+    """[board] either `outline = [x1, y1, x2, y2]` or `origin` + `width`/`height`
+    (+ optional `corner_radius`)."""
+    if "outline" in bcfg:
+        x1, y1, x2, y2 = bcfg["outline"]
+    else:
+        x1, y1 = bcfg["origin"]
+        x2, y2 = x1 + bcfg["width"], y1 + bcfg["height"]
+    return x1, y1, x2, y2, float(bcfg.get("corner_radius", 0))
+
+
+def _edge(board, shape):
+    shape.SetLayer(pcbnew.Edge_Cuts)
+    shape.SetWidth(MM(0.05))
+    board.Add(shape)
+
+
+def new_board(bcfg: dict):
     board = pcbnew.BOARD()
-    x1, y1, x2, y2 = outline
-    rect = pcbnew.PCB_SHAPE(board, pcbnew.SHAPE_T_RECT)
-    rect.SetStart(pcbnew.VECTOR2I(MM(x1), MM(y1)))
-    rect.SetEnd(pcbnew.VECTOR2I(MM(x2), MM(y2)))
-    rect.SetLayer(pcbnew.Edge_Cuts)
-    rect.SetWidth(MM(0.05))
-    board.Add(rect)
+    x1, y1, x2, y2, r = outline_of(bcfg)
+    if r <= 0:
+        rect = pcbnew.PCB_SHAPE(board, pcbnew.SHAPE_T_RECT)
+        rect.SetStart(pcbnew.VECTOR2I(MM(x1), MM(y1)))
+        rect.SetEnd(pcbnew.VECTOR2I(MM(x2), MM(y2)))
+        _edge(board, rect)
+        return board
+    P = lambda x, y: pcbnew.VECTOR2I(MM(x), MM(y))  # noqa: E731
+    for (ax, ay), (bx, by) in (((x1 + r, y1), (x2 - r, y1)), ((x2, y1 + r), (x2, y2 - r)),
+                               ((x2 - r, y2), (x1 + r, y2)), ((x1, y2 - r), (x1, y1 + r))):
+        seg = pcbnew.PCB_SHAPE(board, pcbnew.SHAPE_T_SEGMENT)
+        seg.SetStart(P(ax, ay)); seg.SetEnd(P(bx, by))
+        _edge(board, seg)
+    k45 = r * (1 - 2 ** -0.5)
+    for (sx, sy), (mx, my), (ex, ey) in (
+            ((x1, y1 + r), (x1 + k45, y1 + k45), (x1 + r, y1)), ((x2 - r, y1), (x2 - k45, y1 + k45), (x2, y1 + r)),
+            ((x2, y2 - r), (x2 - k45, y2 - k45), (x2 - r, y2)), ((x1 + r, y2), (x1 + k45, y2 - k45), (x1, y2 - r))):
+        arc = pcbnew.PCB_SHAPE(board, pcbnew.SHAPE_T_ARC)
+        arc.SetArcGeometry(P(sx, sy), P(mx, my), P(ex, ey))
+        _edge(board, arc)
     return board
 
 
-def add_gnd_pours(board, outline):
+def add_gnd_pours(board, bcfg: dict, layers=("B.Cu",)):
     gnd = board.FindNet("GND")
-    x1, y1, x2, y2 = outline
-    for layer in (pcbnew.B_Cu,):  # solid bottom GND plane; top is for signals
+    x1, y1, x2, y2, _ = outline_of(bcfg)
+    for name in layers:
+        layer = board.GetLayerID(name)
         z = pcbnew.ZONE(board)
         z.SetLayer(layer)
         z.SetNet(gnd)
-        z.SetZoneName(f"GND_{board.GetLayerName(layer)}")
+        z.SetZoneName(f"GND_{name}")
         z.SetLocalClearance(MM(0.25))
         z.SetMinThickness(MM(0.2))
         z.SetPadConnection(pcbnew.ZONE_CONNECTION_THERMAL)
         z.SetThermalReliefGap(MM(0.3))
         z.SetThermalReliefSpokeWidth(MM(0.4))
+        z.SetIslandRemovalMode(pcbnew.ISLAND_REMOVAL_MODE_ALWAYS)  # no floating copper islands
         ol = z.Outline()
         ol.NewOutline()
-        for x, y in ((x1, y1), (x2, y1), (x2, y2), (x1, y2)):
+        for x, y in ((x1, y1), (x2, y1), (x2, y2), (x1, y2)):  # clipped to Edge.Cuts by the filler
             ol.Append(MM(x), MM(y))
         z.SetAssignedPriority(0)
         board.Add(z)
+
+
+def add_silk(board, items: list[dict]):
+    for it in items:
+        t = pcbnew.PCB_TEXT(board)
+        t.SetText(it["text"])
+        t.SetPosition(pcbnew.VECTOR2I(MM(it["at"][0]), MM(it["at"][1])))
+        t.SetLayer(board.GetLayerID(it.get("layer", "F.SilkS")))
+        size = it.get("size", 1.0)
+        t.SetTextSize(pcbnew.VECTOR2I(MM(size), MM(size)))
+        t.SetTextThickness(MM(size * 0.15))
+        if it.get("layer", "F.SilkS").startswith("B."):
+            t.SetMirrored(True)
+        board.Add(t)
 
 
 def load_fp(libdir: Path, fpid: str):
@@ -114,6 +160,8 @@ def set_fields(fp, comp):
         if f.GetName() not in ("Reference", "Value"):
             f.SetVisible(False)
             f.SetLayer(fab)
+            if f.GetTextThickness() == 0:  # else the next GUI save adds (thickness 0.15): diff noise
+                f.SetTextThickness(pcbnew.FromMM(0.15))
 
 
 def main():
@@ -127,7 +175,7 @@ def main():
     comps, pins = read_netlist(a.netlist)
     place = tomllib.loads(a.placement.read_text()) if a.placement else {"parts": {}, "board": {}}
     created = not a.board.exists()
-    board = new_board(place["board"]["outline"]) if created else pcbnew.LoadBoard(str(a.board))
+    board = new_board(place["board"]) if created else pcbnew.LoadBoard(str(a.board))
 
     # nets
     for name in sorted(set(pins.values())):
@@ -136,7 +184,7 @@ def main():
 
     existing = {fp.GetReference(): fp for fp in board.GetFootprints()}
     added, updated, removed = [], [], []
-    park_x = place["board"].get("outline", [0, 0, 0, 0])[2] + 10
+    park_x = (outline_of(place["board"])[2] if place["board"] else 0) + 10
     for ref, comp in sorted(comps.items()):
         fp = existing.get(ref)
         if fp is not None and str(fp.GetFPIDAsString()) != comp["footprint"]:
@@ -173,7 +221,8 @@ def main():
             removed.append(ref)
 
     if created:
-        add_gnd_pours(board, place["board"]["outline"])
+        add_gnd_pours(board, place["board"], place["board"].get("gnd_pour_layers", ["B.Cu"]))
+        add_silk(board, place.get("silk", []))
     pcbnew.ZONE_FILLER(board).Fill(board.Zones())
     board.BuildConnectivity()
     pcbnew.SaveBoard(str(a.board), board)
