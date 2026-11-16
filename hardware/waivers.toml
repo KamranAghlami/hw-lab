@@ -13,5 +13,5 @@ reason = "LSM6DSO SDx (aux I2C master, unused) tied to GND per datasheet"
 
 [[drc]]
 type = "unconnected_items"
-items = ["Track [GND] on F.Cu, length 0.5000 mm"]
-reason = "Freerouting bootstrap left U3 GND pads 6/7 boxed in by +3V3; to be hand-fixed by the owner in the GUI round-trip session (remove this waiver then)"
+items = ["Zone 'GND_F.Cu' [GND] on F.Cu"]
+reason = "Autoroute bootstrap leaves small top-pour GND slivers that no via fits into; owner to clean up in the GUI round-trip (then delete this waiver)"

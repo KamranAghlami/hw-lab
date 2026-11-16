@@ -58,17 +58,17 @@ def main():
             if not pads:
                 continue
             for v in values:
-                reqs.append((r, pin_name, pads[0], v))
+                reqs.append((r, pin_name, pads, v))
     caps = {r: fp for r, fp in fps.items() if r.startswith("C")}
     used, bound = set(), []
-    for r, pin_name, pad, v in sorted(reqs, key=lambda q: (q[3] not in ("100n", "1u"), q[0])):
-        cand = []
+    for r, pin_name, pads, v in sorted(reqs, key=lambda q: (q[3] not in ("100n", "1u"), q[0])):
+        cand = []  # a pin may have several pads (e.g. SOT-223 tab): use the nearest
         for cr, cfp in caps.items():
             if cr in used or cfp.GetValue() != v:
                 continue
-            cp = [p for p in cfp.Pads() if p.GetNetCode() == pad.GetNetCode()]
+            cp = [p for p in cfp.Pads() if p.GetNetCode() == pads[0].GetNetCode()]
             if cp:
-                cand.append((min(MM((p.GetPosition() - pad.GetPosition()).EuclideanNorm()) for p in cp), cr))
+                cand.append((min(MM((p.GetPosition() - q.GetPosition()).EuclideanNorm()) for p in cp for q in pads), cr))
         if not cand:
             bound.append((f"{r}.{pin_name}", v, None, None))
             continue
