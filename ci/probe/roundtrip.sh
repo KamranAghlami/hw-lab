@@ -6,7 +6,7 @@
 #  D. agent renames a net used by routed tracks
 set -x
 o=$PWD/out; R=$PWD
-rm -rf /tmp/rt && cp -r hardware /tmp/rt && cd /tmp/rt
+rm -rf /tmp/rtrepo && mkdir -p /tmp/rtrepo && cp -r hardware tools /tmp/rtrepo/ && cd /tmp/rtrepo/hardware
 git init -q . && git add -A && git -c user.email=a@b -c user.name=ci commit -qm base
 
 stat() { git diff --stat | tail -1; }
@@ -17,7 +17,7 @@ echo "=== A2 pcb: kicad-cli pcb upgrade --force"
 kicad-cli pcb upgrade --force hwlab.kicad_pcb; git diff --stat; git diff > $o/A2.diff; head -40 $o/A2.diff; git checkout -q .
 echo "=== A3 pcb: pcbnew LoadBoard/SaveBoard"
 python3 -c "import pcbnew; b=pcbnew.LoadBoard('hwlab.kicad_pcb'); pcbnew.SaveBoard('hwlab.kicad_pcb', b)"
-git diff --stat; git diff > $o/A3.diff; head -30 $o/A3.diff; git checkout -q .
+git diff --stat; git diff > $o/A3.diff; head -30 $o/A3.diff; cp hwlab.kicad_pro $o/canonical.kicad_pro; git checkout -q .
 echo "=== A4 pcb: kisexpr parse+dump (agent's text tool)"
 python3 -c "
 import sys; sys.path.insert(0,'$R/tools'); import kisexpr as k
@@ -82,5 +82,5 @@ kicad-cli sch export netlist --format kicadsexpr -o /tmp/rt2.net hwlab.kicad_sch
 python3 $R/tools/pcb_sync.py /tmp/rt2.net hwlab.kicad_pcb
 kicad-cli pcb drc --schematic-parity --format json -o $o/D-drc.json hwlab.kicad_pcb
 python3 $R/tools/check_report.py drc $o/D-drc.json --waivers waivers.toml --allow-warnings | head -12
-cp -r /tmp/rt $o/rt-final
+cp -r /tmp/rtrepo/hardware $o/rt-final
 true

@@ -139,7 +139,7 @@ def main():
     park_x = place["board"].get("outline", [0, 0, 0, 0])[2] + 10
     for ref, comp in sorted(comps.items()):
         fp = existing.get(ref)
-        if fp is not None and str(fp.GetFPID().Format()) != comp["footprint"]:
+        if fp is not None and str(fp.GetFPIDAsString()) != comp["footprint"]:
             # footprint changed: swap it in place, keep position/orientation/side
             pos, ori, flipped = fp.GetPosition(), fp.GetOrientationDegrees(), fp.IsFlipped()
             board.Remove(fp)
