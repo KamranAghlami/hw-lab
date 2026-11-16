@@ -569,17 +569,6 @@
 				)
 			)
 		)
-		(property "ki_keywords" "RF Radio BT ESP ESP32-S3 Espressif onboard PCB antenna"
-			(at 0 0 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Manufacturer" "Espressif"
 			(at 0 0 0)
 			(show_name no)
@@ -603,6 +592,17 @@
 			)
 		)
 		(property "LCSC" "C2913198"
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "ki_keywords" "RF Radio BT ESP ESP32-S3 Espressif onboard PCB antenna"
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1454,17 +1454,6 @@
 				)
 			)
 		)
-		(property "ki_keywords" "linear regulator ldo fixed positive"
-			(at 0 0 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Manufacturer" "Advanced Monolithic Systems"
 			(at 0 0 0)
 			(show_name no)
@@ -1488,6 +1477,17 @@
 			)
 		)
 		(property "LCSC" "C6186"
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "ki_keywords" "linear regulator ldo fixed positive"
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -1631,17 +1631,6 @@
 				)
 			)
 		)
-		(property "ki_keywords" "Accelerometer Gyroscope MEMS"
-			(at 0 0 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Manufacturer" "STMicroelectronics"
 			(at 0 0 0)
 			(show_name no)
@@ -1665,6 +1654,17 @@
 			)
 		)
 		(property "LCSC" "C2655100"
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "ki_keywords" "Accelerometer Gyroscope MEMS"
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2009,17 +2009,6 @@
 				)
 			)
 		)
-		(property "ki_keywords" "usb universal serial bus type-C USB2.0"
-			(at 0 0 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Manufacturer" "Korean Hroparts Elec"
 			(at 0 0 0)
 			(show_name no)
@@ -2043,6 +2032,17 @@
 			)
 		)
 		(property "LCSC" "C165948"
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "ki_keywords" "usb universal serial bus type-C USB2.0"
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -2746,17 +2746,6 @@
 				)
 			)
 		)
-		(property "ki_keywords" "connector"
-			(at 0 0 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Manufacturer" "JST"
 			(at 0 0 0)
 			(show_name no)
@@ -2780,6 +2769,17 @@
 			)
 		)
 		(property "LCSC" "C160404"
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "ki_keywords" "connector"
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3026,17 +3026,6 @@
 				)
 			)
 		)
-		(property "ki_keywords" "switch normally-open pushbutton push-button"
-			(at 0 0 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Manufacturer" "XKB Connection"
 			(at 0 0 0)
 			(show_name no)
@@ -3060,6 +3049,17 @@
 			)
 		)
 		(property "LCSC" "C318884"
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "ki_keywords" "switch normally-open pushbutton push-button"
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3233,17 +3233,6 @@
 				)
 			)
 		)
-		(property "ki_keywords" "LED diode"
-			(at 0 0 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Manufacturer" "Hubei KENTO Elec"
 			(at 0 0 0)
 			(show_name no)
@@ -3267,6 +3256,17 @@
 			)
 		)
 		(property "LCSC" "C2297"
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "ki_keywords" "LED diode"
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3444,17 +3444,6 @@
 				)
 			)
 		)
-		(property "ki_keywords" "R res resistor"
-			(at 0 0 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Manufacturer" "UNI-ROYAL"
 			(at 0 0 0)
 			(show_name no)
@@ -3478,6 +3467,17 @@
 			)
 		)
 		(property "LCSC" "C11702"
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "ki_keywords" "R res resistor"
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3606,17 +3606,6 @@
 				)
 			)
 		)
-		(property "ki_keywords" "R res resistor"
-			(at 0 0 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Manufacturer" "UNI-ROYAL"
 			(at 0 0 0)
 			(show_name no)
@@ -3640,6 +3629,17 @@
 			)
 		)
 		(property "LCSC" "C25900"
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "ki_keywords" "R res resistor"
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3768,17 +3768,6 @@
 				)
 			)
 		)
-		(property "ki_keywords" "R res resistor"
-			(at 0 0 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Manufacturer" "UNI-ROYAL"
 			(at 0 0 0)
 			(show_name no)
@@ -3802,6 +3791,17 @@
 			)
 		)
 		(property "LCSC" "C25905"
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "ki_keywords" "R res resistor"
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3930,17 +3930,6 @@
 				)
 			)
 		)
-		(property "ki_keywords" "R res resistor"
-			(at 0 0 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Manufacturer" "UNI-ROYAL"
 			(at 0 0 0)
 			(show_name no)
@@ -3964,6 +3953,17 @@
 			)
 		)
 		(property "LCSC" "C25744"
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "ki_keywords" "R res resistor"
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4094,17 +4094,6 @@
 				)
 			)
 		)
-		(property "ki_keywords" "cap capacitor"
-			(at 0 0 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Manufacturer" "Samsung Electro-Mechanics"
 			(at 0 0 0)
 			(show_name no)
@@ -4128,6 +4117,17 @@
 			)
 		)
 		(property "LCSC" "C1525"
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "ki_keywords" "cap capacitor"
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4271,17 +4271,6 @@
 				)
 			)
 		)
-		(property "ki_keywords" "cap capacitor"
-			(at 0 0 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Manufacturer" "Samsung Electro-Mechanics"
 			(at 0 0 0)
 			(show_name no)
@@ -4305,6 +4294,17 @@
 			)
 		)
 		(property "LCSC" "C52923"
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "ki_keywords" "cap capacitor"
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4448,17 +4448,6 @@
 				)
 			)
 		)
-		(property "ki_keywords" "cap capacitor"
-			(at 0 0 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Manufacturer" "Samsung Electro-Mechanics"
 			(at 0 0 0)
 			(show_name no)
@@ -4482,6 +4471,17 @@
 			)
 		)
 		(property "LCSC" "C19702"
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "ki_keywords" "cap capacitor"
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -4625,17 +4625,6 @@
 				)
 			)
 		)
-		(property "ki_keywords" "cap capacitor"
-			(at 0 0 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(hide yes)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
 		(property "Manufacturer" "Samsung Electro-Mechanics"
 			(at 0 0 0)
 			(show_name no)
@@ -4659,6 +4648,17 @@
 			)
 		)
 		(property "LCSC" "C45783"
+			(at 0 0 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(hide yes)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "ki_keywords" "cap capacitor"
 			(at 0 0 0)
 			(show_name no)
 			(do_not_autoplace no)

@@ -138,8 +138,8 @@ def build_footprint(lib_id: str, tag: str, offline: bool) -> tuple[str, list, li
         else:
             try:
                 models.append(fetch("kicad-packages3D", rel, tag, offline))
-            except urllib.error.HTTPError as e:
-                print(f"  WARNING: upstream 3D model missing ({e.code}): {rel}")
+            except (urllib.error.HTTPError, SystemExit) as e:
+                print(f"  WARNING: upstream 3D model missing ({getattr(e, 'code', e)}): {rel}")
                 MISSING_MODELS.append(rel)
         m[1] = "${KIPRJMOD}/lib/3dmodels/" + Path(rel).name
     return name, tree, models
