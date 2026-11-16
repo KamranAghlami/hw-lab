@@ -14,7 +14,7 @@ kicad-cli pcb render --side top -w 1200 -h 1600 -o $o/placed-top.png hwlab.kicad
 # --- autoroute
 t0=$(date +%s)
 apt-get update -qq && apt-get install -y -qq openjdk-21-jre-headless curl >/dev/null 2>&1
-url=$(curl -s https://api.github.com/repos/freerouting/freerouting/releases/latest | python3 -c "import sys,json;print([a['browser_download_url'] for a in json.load(sys.stdin)['assets'] if a['name'].endswith('.jar')][0])")
+url=https://github.com/freerouting/freerouting/releases/download/v2.1.0/freerouting-2.1.0.jar
 echo "freerouting: $url"; curl -sL -o /tmp/fr.jar "$url"
 echo "java+freerouting install $(( $(date +%s) - t0 ))s"
 python3 -c "import pcbnew; b=pcbnew.LoadBoard('hwlab.kicad_pcb'); print('dsn', pcbnew.ExportSpecctraDSN(b, '/tmp/hwlab.dsn'))"

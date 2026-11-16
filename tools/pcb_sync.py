@@ -41,6 +41,11 @@ def read_netlist(path: Path):
             for f in k.children(flds, "field"):
                 name = k.find(f, "name")[1]
                 fields[str(name)] = str(f[2]) if len(f) > 2 else ""
+        for key in ("datasheet", "description"):
+            node = k.find(c, key)
+            if node is not None:
+                fields[key.capitalize()] = str(node[1])
+        fields.pop("Footprint", None)
         comps[ref] = {
             "value": str(k.find(c, "value")[1]),
             "footprint": str(k.find(c, "footprint")[1]),
@@ -98,10 +103,10 @@ def load_fp(libdir: Path, fpid: str):
 
 def set_fields(fp, comp):
     fp.SetValue(comp["value"])
-    for key in ("MPN", "LCSC", "Manufacturer"):
-        if key in comp["fields"]:
+    for key, val in comp["fields"].items():
+        if True:
             try:
-                fp.SetField(key, comp["fields"][key])
+                fp.SetField(key, val)
             except Exception as e:  # API drift between versions: record, don't die
                 print(f"  note: SetField({key}) failed: {e}")
 
