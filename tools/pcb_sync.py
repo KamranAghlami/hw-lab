@@ -107,6 +107,10 @@ def set_fields(fp, comp):
         if True:
             try:
                 fp.SetField(key, val)
+                f = fp.GetFieldByName(key)
+                if f is not None:  # like KiCad's own update: extra fields are hidden, on F.Fab
+                    f.SetVisible(False)
+                    f.SetLayer(pcbnew.F_Fab if not fp.IsFlipped() else pcbnew.B_Fab)
             except Exception as e:  # API drift between versions: record, don't die
                 print(f"  note: SetField({key}) failed: {e}")
 

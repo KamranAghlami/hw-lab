@@ -19,7 +19,7 @@ echo "freerouting: $url"; curl -sL -o /tmp/fr.jar "$url"
 echo "java+freerouting install $(( $(date +%s) - t0 ))s"
 python3 -c "import pcbnew; b=pcbnew.LoadBoard('hwlab.kicad_pcb'); print('dsn', pcbnew.ExportSpecctraDSN(b, '/tmp/hwlab.dsn'))"
 t0=$(date +%s)
-timeout 900 java -jar /tmp/fr.jar -de /tmp/hwlab.dsn -do /tmp/hwlab.ses -mp 30 --gui.enabled=false 2>&1 | tail -25
+timeout 900 java -jar /tmp/fr.jar -de /tmp/hwlab.dsn -do /tmp/hwlab.ses -mp 100 --gui.enabled=false 2>&1 | tail -25
 echo "freerouting took $(( $(date +%s) - t0 ))s"
 cp /tmp/hwlab.dsn /tmp/hwlab.ses $o/ 2>/dev/null
 python3 - <<'PY'
