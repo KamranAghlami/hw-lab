@@ -27,6 +27,9 @@ footprint = "RF_Module:ESP32-S3-WROOM-1"
 manufacturer = "Espressif"
 mpn = "ESP32-S3-WROOM-1-N8"
 lcsc = "C2913198"  # extended
+# datasheet (ESP32-S3-WROOM-1 v1.x, table "Pin Definitions"): pad -> name; "|" = accepted aliases
+datasheet_pins = { "1" = "GND", "2" = "3V3", "3" = "EN", "13" = "IO19|USB_D-", "14" = "IO20|USB_D+", "27" = "IO0", "36" = "RXD0", "37" = "TXD0", "40" = "GND", "41" = "GND" }
+decap = { "3V3" = ["100n", "10u"] }
 
 [[part]]
 name = "AMS1117-3.3"
@@ -35,6 +38,8 @@ footprint = "Package_TO_SOT_SMD:SOT-223-3_TabPin2"
 manufacturer = "Advanced Monolithic Systems"
 mpn = "AMS1117-3.3"
 lcsc = "C6186"  # basic
+datasheet_pins = { "1" = "GND|ADJ", "2" = "VO|VOUT", "3" = "VI|VIN" }  # AMS1117 SOT-223
+decap = { "VI" = ["10u"], "VO" = ["22u"] }
 
 [[part]]
 # No LSM6DSO symbol upstream; LSM6DSL/LSM6DS3 share the LGA-14L pinout.
@@ -47,6 +52,8 @@ lcsc = "C2655100"  # extended
 datasheet = "https://www.st.com/resource/en/datasheet/lsm6dso.pdf"
 description = "iNEMO 6DoF IMU, accelerometer + gyroscope, I2C/SPI/I3C, 1.71-3.6V, LGA-14L"
 pin_names = { "10" = "OCS_Aux", "11" = "SDO_Aux" }
+datasheet_pins = { "1" = "SDO/SA0", "2" = "SDX", "3" = "SCX", "4" = "INT1", "5" = "VDDIO", "6" = "GND", "7" = "GND", "8" = "VDD", "9" = "INT2", "10" = "OCS_Aux", "11" = "SDO_Aux", "12" = "CS", "13" = "SCL", "14" = "SDA" }
+decap = { "VDD" = ["100n"], "VDDIO" = ["100n"] }
 
 # ---- connectors / switches / LED -------------------------------------------
 [[part]]
@@ -81,6 +88,7 @@ value = "Green"
 manufacturer = "Hubei KENTO Elec"
 mpn = "KT-0805G"
 lcsc = "C2297"  # basic
+datasheet_pins = { "1" = "K", "2" = "A" }  # KiCad LED footprint: pad 1 = cathode
 
 # ---- passives -------------------------------------------------------------------
 [[part]]

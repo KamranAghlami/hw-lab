@@ -89,6 +89,9 @@ def main() -> None:
     res["erc"] = {"fail": rc != 0, "report": log.strip()}
     rc, log = sh("python3", str(ROOT / "tools/pinmap.py"), "check", str(net), str(out / "firmware/include/board_pins.h"))
     res["pinmap"] = {"fail": rc != 0, "report": log.strip()}
+    rc, log = sh("python3", str(ROOT / "tools/intent_check.py"), str(net), "--parts", str(hw / "lib/parts.toml"),
+                 "--lib", str(hw / "lib"))
+    res["intent"] = {"fail": rc != 0, "report": log.strip()}
     sh("kicad-cli", "pcb", "drc", "--severity-all", "--schematic-parity", "--format", "json",
        "-o", str(out / "drc.json"), str(pcb))
     rc, log = sh("python3", str(ROOT / "tools/check_report.py"), "drc", str(out / "drc.json"),

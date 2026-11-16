@@ -50,6 +50,9 @@ jobs:
         run: |
           kicad-cli sch export netlist --format kicadsexpr -o out/hwlab.net $BOARD.kicad_sch
           python3 tools/pinmap.py check out/hwlab.net firmware/include/board_pins.h
+      - name: Design intent (datasheet pinouts, decoupling)
+        if: always()
+        run: python3 tools/intent_check.py out/hwlab.net
       - name: DRC (with schematic parity)
         if: always()
         run: |
