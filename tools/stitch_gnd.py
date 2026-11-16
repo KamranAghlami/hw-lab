@@ -25,6 +25,12 @@ def main():
     ap.add_argument("--clearance", type=float, default=0.3)
     a = ap.parse_args()
     b = pcbnew.LoadBoard(a.board)
+    gnd_zones = [z for z in b.Zones() if z.GetNetname() == "GND" and not z.GetIsRuleArea()]
+    # keep every island while stitching, so enclosed pour areas can be rescued by a via;
+    # afterwards islands that are still unconnected are removed again
+    modes = {id(z): z.GetIslandRemovalMode() for z in gnd_zones}
+    for z in gnd_zones:
+        z.SetIslandRemovalMode(pcbnew.ISLAND_REMOVAL_MODE_NEVER)
     filler = pcbnew.ZONE_FILLER(b)
     filler.Fill(b.Zones())
     gnd = b.FindNet("GND")
@@ -96,6 +102,8 @@ def main():
                     placed = True
                 xx += MM(0.25)
             yy += MM(0.25)
+    for z in gnd_zones:
+        z.SetIslandRemovalMode(modes[id(z)])
     filler.Fill(b.Zones())
     pcbnew.SaveBoard(a.board, b)
     print(f"stitching vias added: {added} grid + {island_fix} island")

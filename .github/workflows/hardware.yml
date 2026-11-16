@@ -58,6 +58,9 @@ jobs:
         run: |
           kicad-cli pcb drc --severity-all --schematic-parity --refill-zones --format json -o out/drc.json $BOARD.kicad_pcb
           python3 tools/check_report.py drc out/drc.json --waivers hardware/waivers.toml --allow-warnings
+      - name: Layout rules (decap bound to its pin, connectors at edges, antenna at edge)
+        if: always()
+        run: python3 tools/layout_check.py $BOARD.kicad_pcb --gate decap edges antenna
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -92,7 +95,7 @@ jobs:
             --layers F.Cu,F.Mask,F.Silkscreen,Edge.Cuts -o out/img/layout-top.svg $BOARD.kicad_pcb
           kicad-cli pcb export svg --mode-single --fit-page-to-board --exclude-drawing-sheet --mirror \
             --layers B.Cu,B.Mask,B.Silkscreen,Edge.Cuts -o out/img/layout-bottom.svg $BOARD.kicad_pcb
-          for f in out/img/layout-*.svg; do rsvg-convert -w 2400 -b white "$f" -o "${f%.svg}.png"; done
+          for f in out/img/layout-*.svg; do rsvg-convert -w 2400 -b '#2b2b2b' "$f" -o "${f%.svg}.png"; done
       - uses: actions/upload-artifact@v4
         with:
           name: outputs

@@ -22,9 +22,9 @@ gnd_pour_layers = ["F.Cu", "B.Cu"]
 # module, rotated so the antenna points left; body spans x 100..125.5, y 118..136
 U1  = [112.75, 126.99, 90]
 C3  = [108.76, 137.6, 0]     # 100n right under 3V3 pin 2 (108.76, 135.74)
-C7  = [111.8, 138.2, 0]     # 10u bulk at the module
-R3  = [114.5, 139.5, 90]     # EN pull-up, EN = pin 3 (110.03, 135.74)
-C4  = [117.0, 139.5, 90]     # EN RC
+C7  = [112.2, 138.4, 0]     # 10u bulk at the module
+R3  = [115.5, 139.5, 90]     # EN pull-up, EN = pin 3 (110.03, 135.74)
+C4  = [118.5, 139.5, 90]     # EN RC
 # USB-C on the right edge, mouth right
 J1  = [181.6, 126.99, 90]
 R1  = [175.0, 121.0, 0]
@@ -35,8 +35,8 @@ C1  = [160.5, 116.5, 0]      # 10u on VBUS (LDO in)
 C2  = [173.5, 117.5, 0]      # 22u on +3V3 (LDO out)
 # IMU mid-board
 U3  = [146.0, 127.0, 0]
-C5  = [143.3, 127.0, 90]
-C6  = [148.7, 127.0, 90]
+C5  = [142.8, 127.0, 90]
+C6  = [149.2, 127.0, 90]
 R4  = [144.0, 121.5, 0]
 R5  = [148.0, 121.5, 0]
 # UI

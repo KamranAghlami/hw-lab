@@ -4,20 +4,23 @@
     layout_check.py hardware/hwlab.kicad_pcb [--decap-mm 3] [--json out.json]
 
 Checks (each PASS/FAIL with the numbers behind it):
-  decap      every capacitor on +3V3 has a pad within N mm of an IC power pad on +3V3
+  decap      each cap required by parts.toml `decap` is bound to its IC pin; 100n/1u <= N mm, bulk <= 10 mm
   edges      USB-C (J1) and debug port (J2) touch the board edge (<= 1 mm)
   antenna    U1's antenna end is at the board edge (<= 0.5 mm)
   inside     every footprint's pads lie inside the outline
   rotations  all footprints at multiples of 90 degrees
   angles     all track segments at multiples of 45 degrees
   vias       via count (informational)
-Exit code is 0 always; this is a score, the DRC gate is separate.
+With --gate <checks...> it exits 1 if any named check fails (CI uses decap, edges, antenna).
 """
 from __future__ import annotations
 
 import argparse
 import json
 import math
+import sys
+import tomllib
+from pathlib import Path
 
 import pcbnew
 
@@ -29,6 +32,9 @@ def main():
     ap.add_argument("board")
     ap.add_argument("--decap-mm", type=float, default=3.0)
     ap.add_argument("--json")
+    ap.add_argument("--parts", default=str(Path(__file__).resolve().parents[1] / "hardware/lib/parts.toml"))
+    ap.add_argument("--gate", nargs="*", default=None,
+                    help="fail (exit 1) if any of these checks fail, e.g. --gate decap edges antenna")
     a = ap.parse_args()
     b = pcbnew.LoadBoard(a.board)
     edge = b.GetBoardEdgesBoundingBox()
@@ -39,20 +45,41 @@ def main():
     def add(name, ok, detail):
         res.append({"check": name, "pass": bool(ok), "detail": detail})
 
-    # decap distance
-    ic_pads = [p for r, fp in fps.items() if r.startswith("U") for p in fp.Pads() if p.GetNetname() == "+3V3"]
-    worst = []
-    for r, fp in sorted(fps.items()):
-        if not r.startswith("C"):
+    # decap distance: bind each required cap (parts.toml `decap`) to the pad it serves.
+    # Greedy: per IC power pad, nearest unassigned cap of the required value on that net.
+    parts = {p["name"]: p for p in tomllib.loads(Path(a.parts).read_text())["part"]}
+    reqs = []  # (ref, pin name, pad, value)
+    for r, fp in fps.items():
+        part = next((p for p in parts.values() if p.get("mpn") == fp.GetFieldText("MPN")), None)
+        if not part:
             continue
-        cp = [p for p in fp.Pads() if p.GetNetname() == "+3V3"]
-        if not cp or not ic_pads:
+        for pin_name, values in part.get("decap", {}).items():
+            pads = [p for p in fp.Pads() if p.GetPinFunction().upper() == pin_name.upper()]
+            if not pads:
+                continue
+            for v in values:
+                reqs.append((r, pin_name, pads[0], v))
+    caps = {r: fp for r, fp in fps.items() if r.startswith("C")}
+    used, bound = set(), []
+    for r, pin_name, pad, v in sorted(reqs, key=lambda q: (q[3] not in ("100n", "1u"), q[0])):
+        cand = []
+        for cr, cfp in caps.items():
+            if cr in used or cfp.GetValue() != v:
+                continue
+            cp = [p for p in cfp.Pads() if p.GetNetCode() == pad.GetNetCode()]
+            if cp:
+                cand.append((min(MM((p.GetPosition() - pad.GetPosition()).EuclideanNorm()) for p in cp), cr))
+        if not cand:
+            bound.append((f"{r}.{pin_name}", v, None, None))
             continue
-        d = min(MM((p.GetPosition() - q.GetPosition()).EuclideanNorm()) for p in cp for q in ic_pads)
-        worst.append((r, round(d, 2)))
-    small = {r for r, fp in fps.items() if r.startswith("C") and fp.GetValue() in ("100n", "1u")}
-    far = [w for w in worst if (w[1] > a.decap_mm if w[0] in small else w[1] > 10.0)]
-    add("decap", not far, f"distances {worst}; limits {a.decap_mm} mm (<=1u), 10 mm (bulk); too far: {far}")
+        d, cr = min(cand)
+        used.add(cr)
+        bound.append((f"{r}.{pin_name}", v, cr, round(d, 2)))
+    def limit(v):
+        return a.decap_mm if v in ("100n", "1u") else 10.0
+    bad = [x for x in bound if x[2] is None or x[3] > limit(x[1])]
+    add("decap", not bad, "pin<-cap mm: " + ", ".join(f"{p}<-{c}({v}) {d}" for p, v, c, d in bound)
+        + f"; limits {a.decap_mm} mm (<=1u) / 10 mm (bulk); violations: {bad}")
 
     # connectors / antenna at edges
     def edge_gap(fp):
@@ -101,6 +128,11 @@ def main():
     print(f"layout checklist: {score}/{total}")
     if a.json:
         json.dump({"score": score, "total": total, "checks": res}, open(a.json, "w"), indent=2)
+    if a.gate is not None:
+        failed = [r["check"] for r in res if not r["pass"] and r["check"] in a.gate]
+        if failed:
+            print(f"layout gate FAILED: {failed}")
+            sys.exit(1)
 
 
 if __name__ == "__main__":

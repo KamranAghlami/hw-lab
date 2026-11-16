@@ -38,8 +38,8 @@ kicad-cli pcb render --side top -w 1600 -h 1100 -o $o/routed-top.png hwlab.kicad
 for side in top bottom; do
   if [ $side = top ]; then L=F.Cu,F.Mask,F.Silkscreen,Edge.Cuts; M=; else L=B.Cu,B.Mask,B.Silkscreen,Edge.Cuts; M=--mirror; fi
   kicad-cli pcb export svg --mode-single --fit-page-to-board --exclude-drawing-sheet $M --layers $L -o $o/layout-$side.svg hwlab.kicad_pcb
-  rsvg-convert -w 2400 -b white $o/layout-$side.svg -o $o/layout-$side.png
+  rsvg-convert -w 2400 -b '#2b2b2b' $o/layout-$side.svg -o $o/layout-$side.png
 done
 kicad-cli pcb render --side bottom -w 1600 -h 1100 -o $o/routed-bottom.png hwlab.kicad_pcb
-python3 ../tools/layout_check.py hwlab.kicad_pcb --json $o/layout-check.json
+python3 ../tools/layout_check.py hwlab.kicad_pcb --json $o/layout-check.json --parts lib/parts.toml
 true
