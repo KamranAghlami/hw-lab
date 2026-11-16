@@ -147,36 +147,75 @@ class Design:
         for ref, part in sorted(self.parts.items()):
             used[part.sym.name] = part.sym
             items.append((ORDER["symbol"], uid("sym", ref), self._symbol(part, ref)))
-            seen: set[tuple[float, float]] = set()
+            # 1) one entry per distinct connection point (stacked pins collapse)
+            points: dict[tuple[float, float], tuple[Pin, str | None]] = {}
             for pin in part.sym.pins:
                 pt = self.pin_point(part, pin)
-                if pt in seen:
-                    continue
-                seen.add(pt)
                 net = part.nets.get(pin.number)
-                if net is None:
-                    if pin.etype == "no_connect" or part.sym.power:
-                        continue
-                    if any(part.nets.get(q.number) for q in part.sym.pins if self.pin_point(part, q) == pt):
-                        net = next(part.nets[q.number] for q in part.sym.pins
-                                   if self.pin_point(part, q) == pt and q.number in part.nets)
+                if pt not in points or (points[pt][1] is None and net):
+                    points[pt] = (pin, net)
+            # 2) runs of adjacent pins (same side, 2.54 pitch) on the same power net
+            runs: dict[tuple[float, float], list] = {}
+            by_side: dict[tuple, list] = {}
+            for pt, (pin, net) in points.items():
+                if net in POWER_NETS:
+                    d = self.pin_out_angle(part, pin)
+                    line = pt[0] if d in (0, 180) else pt[1]
+                    by_side.setdefault((d, line, net), []).append(pt)
+            for (d, _, net), pts in by_side.items():
+                along = 1 if d in (0, 180) else 0
+                pts.sort(key=lambda p: p[along])
+                run = [pts[0]]
+                for p in pts[1:]:
+                    if abs(p[along] - run[-1][along] - STUB) < 1e-6:
+                        run.append(p)
                     else:
-                        key = ("nc", ref, pin.number)
-                        items.append((ORDER["no_connect"], uid(*key),
-                                      S("no_connect", S("at", *pt), S("uuid", uid(*key)))))
-                        continue
+                        runs[run[0]] = run
+                        run = [p]
+                runs[run[0]] = run
+            members = {p: r for r in runs.values() for p in r}
+            # 3) emit
+            for pt, (pin, net) in sorted(points.items()):
+                key = (ref, pin.number)
+                if net is None:
+                    if pin.etype != "no_connect" and not part.sym.power:
+                        items.append((ORDER["no_connect"], uid("nc", *key),
+                                      S("no_connect", S("at", *pt), S("uuid", uid("nc", *key)))))
+                    continue
                 d = self.pin_out_angle(part, pin)
                 dx, dy = DIRS[d]
-                end = (round(pt[0] + dx * STUB, 4), round(pt[1] + dy * STUB, 4))
-                key = (ref, pin.number)
-                items.append((ORDER["wire"], uid("wire", *key), S(
-                    "wire", S("pts", S("xy", *pt), S("xy", *end)),
-                    S("stroke", S("width", 0), S("type", Sym("default"))), S("uuid", uid("wire", *key)))))
-                if net in POWER_NETS:
-                    used[net] = self.lib[net]
-                    items.append((ORDER["symbol"], uid("pwr", *key), self._power(net, end, d, key)))
-                else:
+                stub = STUB
+                run = members.get(pt)
+                if net in POWER_NETS and d in (0, 180) and run and len(run) == 1:
+                    # stagger lone sideways power symbols so neighbours don't overlap
+                    stub = STUB if round(pt[1] / STUB) % 2 == 0 else 3 * STUB
+                end = (round(pt[0] + dx * stub, 4), round(pt[1] + dy * stub, 4))
+                items.append(self._wire(pt, end, ("wire", *key)))
+                if net not in POWER_NETS:
                     items.append((ORDER["label"], uid("label", *key), self._label(net, end, d, key)))
+                    continue
+                used[net] = self.lib[net]
+                if len(run) == 1:
+                    items.append((ORDER["symbol"], uid("pwr", *key), self._power(net, end, d, key)))
+                    continue
+                if pt != run[0]:
+                    continue  # the run is drawn once, from its first pin
+                ends = [(round(p[0] + dx * STUB, 4), round(p[1] + dy * STUB, 4)) for p in run]
+                for a, b in zip(ends, ends[1:]):
+                    items.append(self._wire(a, b, ("join", ref, *a)))
+                for e in ends[1:-1]:
+                    items.append((ORDER["junction"], uid("junction", ref, *e), S(
+                        "junction", S("at", *e), S("diameter", 0), S("color", 0, 0, 0, 0),
+                        S("uuid", uid("junction", ref, *e)))))
+                if d in (0, 180):  # vertical bar: hang the symbol off its top/bottom, upright
+                    body = self.lib[net].pins[0].angle
+                    tip = ends[-1] if body == 270 else ends[0]
+                    sgn = 1 if body == 270 else -1
+                    p2 = (tip[0], round(tip[1] + sgn * STUB, 4))
+                    items.append(self._wire(tip, p2, ("tail", ref, *tip)))
+                    items.append((ORDER["symbol"], uid("pwr", *key), self._power(net, p2, body, key)))
+                else:
+                    items.append((ORDER["symbol"], uid("pwr", *key), self._power(net, ends[0], d, key)))
         items.sort(key=lambda t: (t[0], t[1]))
         lib_symbols = [self._lib_symbol(s) for _, s in sorted(used.items())]
         title = S("title_block")
@@ -251,6 +290,12 @@ class Design:
         node.append(S("pin", "1", S("uuid", uid("pwrpin", *key))))
         node.append(self._instances(ref))
         return node
+
+    @staticmethod
+    def _wire(a, b, key) -> tuple[int, str, list]:
+        u = uid(*key)
+        return (ORDER["wire"], u, S("wire", S("pts", S("xy", *a), S("xy", *b)),
+                                    S("stroke", S("width", 0), S("type", Sym("default"))), S("uuid", u)))
 
     @staticmethod
     def _label(net: str, at: tuple[float, float], out_angle: int, key) -> list:

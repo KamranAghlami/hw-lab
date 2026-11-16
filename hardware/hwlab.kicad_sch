@@ -4744,6 +4744,12 @@
 			(embedded_fonts no)
 		)
 	)
+	(junction
+		(at 167.64 152.4)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "99c5c3f1-f49f-5ec6-acef-bb10c8fd99fe")
+	)
 	(no_connect
 		(at 200.66 104.14)
 		(uuid "11c56d26-d0e9-5c31-a122-cf3c01acc850")
@@ -5072,6 +5078,16 @@
 	)
 	(wire
 		(pts
+			(xy 167.64 149.86) (xy 167.64 152.4)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3ffd4818-4e3a-5cca-a5f2-1e1bdef6b57d")
+	)
+	(wire
+		(pts
 			(xy 236.22 54.61) (xy 236.22 57.15)
 		)
 		(stroke
@@ -5192,7 +5208,7 @@
 	)
 	(wire
 		(pts
-			(xy 170.18 165.1) (xy 167.64 165.1)
+			(xy 170.18 165.1) (xy 162.56 165.1)
 		)
 		(stroke
 			(width 0)
@@ -5502,6 +5518,26 @@
 	)
 	(wire
 		(pts
+			(xy 185.42 139.7) (xy 187.96 139.7)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e5ebc381-4351-5c0c-94cb-203c511ba358")
+	)
+	(wire
+		(pts
+			(xy 167.64 154.94) (xy 167.64 157.48)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e73b3e90-ae40-5fc2-a4a3-d2dc8c4f386d")
+	)
+	(wire
+		(pts
 			(xy 43.18 127) (xy 40.64 127)
 		)
 		(stroke
@@ -5522,7 +5558,7 @@
 	)
 	(wire
 		(pts
-			(xy 71.12 165.1) (xy 68.58 165.1)
+			(xy 71.12 165.1) (xy 63.5 165.1)
 		)
 		(stroke
 			(width 0)
@@ -5549,6 +5585,16 @@
 			(type default)
 		)
 		(uuid "f2a39ec1-14b0-5669-a021-87382d519527")
+	)
+	(wire
+		(pts
+			(xy 167.64 152.4) (xy 167.64 154.94)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f4bccfa6-992e-5658-8699-01afe146bd64")
 	)
 	(wire
 		(pts
@@ -6096,7 +6142,7 @@
 	)
 	(symbol
 		(lib_id "hwlab:GND")
-		(at 167.64 149.86 270)
+		(at 167.64 157.48 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -6106,7 +6152,7 @@
 		(dnp no)
 		(uuid "052ffcb7-0080-54fd-8b68-fccc7289a5ff")
 		(property "Reference" "#PWR37654"
-			(at 167.64 156.21 0)
+			(at 167.64 163.83 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6117,7 +6163,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 167.64 153.67 0)
+			(at 167.64 161.29 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -6127,7 +6173,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 167.64 149.86 0)
+			(at 167.64 157.48 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6138,7 +6184,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 167.64 149.86 0)
+			(at 167.64 157.48 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6149,7 +6195,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 167.64 149.86 0)
+			(at 167.64 157.48 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6897,7 +6943,7 @@
 	)
 	(symbol
 		(lib_id "hwlab:+3V3")
-		(at 167.64 165.1 90)
+		(at 162.56 165.1 90)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -6907,7 +6953,7 @@
 		(dnp no)
 		(uuid "26e5f9f4-2e1b-5a91-9bca-87cb6df26bc1")
 		(property "Reference" "#PWR62611"
-			(at 167.64 168.91 0)
+			(at 162.56 168.91 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6918,7 +6964,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 167.64 161.544 0)
+			(at 162.56 161.544 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -6928,7 +6974,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 167.64 165.1 0)
+			(at 162.56 165.1 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6939,7 +6985,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 167.64 165.1 0)
+			(at 162.56 165.1 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6950,7 +6996,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3V3\""
-			(at 167.64 165.1 0)
+			(at 162.56 165.1 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9851,83 +9897,6 @@
 		)
 	)
 	(symbol
-		(lib_id "hwlab:+3V3")
-		(at 187.96 139.7 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "b34b1ddb-a4e7-5fb1-9c42-399ccf4dbfba")
-		(property "Reference" "#PWR73720"
-			(at 187.96 143.51 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "+3V3"
-			(at 187.96 136.144 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 187.96 139.7 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 187.96 139.7 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"+3V3\""
-			(at 187.96 139.7 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "9ac4b90a-9997-58c2-b6b2-da30560aa538")
-		)
-		(instances
-			(project "hwlab"
-				(path "/d921b1cd-8f5e-538e-8fe1-61c5055cbbea"
-					(reference "#PWR73720")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "hwlab:AMS1117-3.3")
 		(at 50.8 127 0)
 		(unit 1)
@@ -10894,83 +10863,6 @@
 		)
 	)
 	(symbol
-		(lib_id "hwlab:GND")
-		(at 167.64 152.4 270)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "d8179614-fbdb-5716-aeaa-45b929de8fa0")
-		(property "Reference" "#PWR50589"
-			(at 167.64 158.75 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "GND"
-			(at 167.64 156.21 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 167.64 152.4 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 167.64 152.4 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 167.64 152.4 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "8dc76767-a1c6-5220-b3ac-85e827a92bfc")
-		)
-		(instances
-			(project "hwlab"
-				(path "/d921b1cd-8f5e-538e-8fe1-61c5055cbbea"
-					(reference "#PWR50589")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "hwlab:PWR_FLAG")
 		(at 111.76 55.88 0)
 		(unit 1)
@@ -11042,83 +10934,6 @@
 			(project "hwlab"
 				(path "/d921b1cd-8f5e-538e-8fe1-61c5055cbbea"
 					(reference "#FLG01")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "hwlab:GND")
-		(at 167.64 154.94 270)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(uuid "d8d7c8c8-729c-5e5c-a4d1-f7e47d048e4c")
-		(property "Reference" "#PWR38228"
-			(at 167.64 161.29 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "GND"
-			(at 167.64 158.75 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 167.64 154.94 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 167.64 154.94 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 167.64 154.94 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "6c16bb3d-e22a-5a79-8955-1d14bed2bf41")
-		)
-		(instances
-			(project "hwlab"
-				(path "/d921b1cd-8f5e-538e-8fe1-61c5055cbbea"
-					(reference "#PWR38228")
 					(unit 1)
 				)
 			)
@@ -11397,7 +11212,7 @@
 	)
 	(symbol
 		(lib_id "hwlab:+3V3")
-		(at 68.58 165.1 90)
+		(at 63.5 165.1 90)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -11407,7 +11222,7 @@
 		(dnp no)
 		(uuid "e7010194-3d94-57db-8a25-7ac827babe3c")
 		(property "Reference" "#PWR05917"
-			(at 68.58 168.91 0)
+			(at 63.5 168.91 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -11418,7 +11233,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 68.58 161.544 0)
+			(at 63.5 161.544 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -11428,7 +11243,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 68.58 165.1 0)
+			(at 63.5 165.1 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -11439,7 +11254,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 68.58 165.1 0)
+			(at 63.5 165.1 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -11450,7 +11265,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3V3\""
-			(at 68.58 165.1 0)
+			(at 63.5 165.1 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)

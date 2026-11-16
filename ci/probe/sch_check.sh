@@ -22,7 +22,4 @@ check() {  # $1 = project dir, $2 = tag
 }
 check hardware raw-sexpr
 [ -f experiments/kiutils/hwlab.kicad_sch ] && check experiments/kiutils kiutils
-for d in experiments/*/; do
-  [ -f $d/probe.sh ] && { echo "===== extra $d"; bash $d/probe.sh; }
-done
 true

@@ -1,0 +1,12 @@
+# Reviewed ERC/DRC waivers, applied by tools/check_report.py in CI.
+# Each needs a reason. Unused waivers are flagged in the CI summary.
+
+[[erc]]
+type = "pin_to_pin"
+items = ["Symbol U3 Pin 1 ", "#FLG02 Pin 1 "]
+reason = "LSM6DSO SDO/SA0 (bidirectional in SPI mode) strapped to GND: I2C address 0x6A"
+
+[[erc]]
+type = "pin_to_pin"
+items = ["Symbol U3 Pin 2 ", "#FLG02 Pin 1 "]
+reason = "LSM6DSO SDx (aux I2C master, unused) tied to GND per datasheet"

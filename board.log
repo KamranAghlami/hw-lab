@@ -1,0 +1,56 @@
+WARNING: KICAD_SYMBOL_DIR environment variable is missing, so the default KiCad symbol libraries won't be searched. @ [/home/kamran/projects/hw-lab/<frozen importlib._bootstrap_external>:995=>/home/kamran/projects/hw-lab/<frozen importlib._bootstrap>:488]
+WARNING: KICAD7_SYMBOL_DIR environment variable is missing, so the default KiCad symbol libraries won't be searched. @ [/home/kamran/projects/hw-lab/<frozen importlib._bootstrap_external>:995=>/home/kamran/projects/hw-lab/<frozen importlib._bootstrap>:488]
+WARNING: KICAD9_SYMBOL_DIR environment variable is missing, so the default KiCad symbol libraries won't be searched. @ [/home/kamran/projects/hw-lab/<frozen importlib._bootstrap_external>:995=>/home/kamran/projects/hw-lab/<frozen importlib._bootstrap>:488]
+WARNING: KICAD6_SYMBOL_DIR environment variable is missing, so the default KiCad symbol libraries won't be searched. @ [/home/kamran/projects/hw-lab/<frozen importlib._bootstrap_external>:995=>/home/kamran/projects/hw-lab/<frozen importlib._bootstrap>:488]
+WARNING: KICAD8_SYMBOL_DIR environment variable is missing, so the default KiCad symbol libraries won't be searched. @ [/home/kamran/projects/hw-lab/<frozen importlib._bootstrap_external>:995=>/home/kamran/projects/hw-lab/<frozen importlib._bootstrap>:488]
+WARNING: fp-lib-table file was not found. Component footprints are not available.
+WARNING: fp-lib-table file was not found. Component footprints are not available.
+WARNING: fp-lib-table file was not found. Component footprints are not available.
+WARNING: fp-lib-table file was not found. Component footprints are not available.
+WARNING: fp-lib-table file was not found. Component footprints are not available.
+WARNING: Missing tag on USB_C_HRO_TYPE-C-31-M-12 instantiated at /home/kamran/projects/hw-lab/experiments/skidl/board.py:23.
+WARNING: Random tag Hz2xxSoAna generated for USB_C_HRO_TYPE-C-31-M-12.
+WARNING: Missing tag on R_5k1_0402 instantiated at /home/kamran/projects/hw-lab/experiments/skidl/board.py:23.
+WARNING: Random tag O8k_WgYbkP generated for R_5k1_0402.
+WARNING: Missing tag on R_5k1_0402 instantiated at /home/kamran/projects/hw-lab/experiments/skidl/board.py:23.
+WARNING: Random tag 5txdqyUssF generated for R_5k1_0402.
+WARNING: Missing tag on AMS1117-3.3 instantiated at /home/kamran/projects/hw-lab/experiments/skidl/board.py:23.
+WARNING: Random tag 61RIuFQ2Ld generated for AMS1117-3.3.
+WARNING: Missing tag on C_10u_0603 instantiated at /home/kamran/projects/hw-lab/experiments/skidl/board.py:23.
+WARNING: Random tag cHJRR1q9g7 generated for C_10u_0603.
+WARNING: Missing tag on C_22u_0805 instantiated at /home/kamran/projects/hw-lab/experiments/skidl/board.py:23.
+WARNING: Random tag N_WXck8SM1 generated for C_22u_0805.
+WARNING: Missing tag on ESP32-S3-WROOM-1-N8 instantiated at /home/kamran/projects/hw-lab/experiments/skidl/board.py:23.
+WARNING: Random tag s6mGSJQzsg generated for ESP32-S3-WROOM-1-N8.
+WARNING: Missing tag on C_100n_0402 instantiated at /home/kamran/projects/hw-lab/experiments/skidl/board.py:23.
+WARNING: Random tag G_N9TW5QU1 generated for C_100n_0402.
+WARNING: Missing tag on C_10u_0603 instantiated at /home/kamran/projects/hw-lab/experiments/skidl/board.py:23.
+WARNING: Random tag QWf3BQcGII generated for C_10u_0603.
+WARNING: Missing tag on R_10k_0402 instantiated at /home/kamran/projects/hw-lab/experiments/skidl/board.py:23.
+WARNING: Random tag pNBhshqn_z generated for R_10k_0402.
+WARNING: Missing tag on C_1u_0402 instantiated at /home/kamran/projects/hw-lab/experiments/skidl/board.py:23.
+WARNING: Random tag Hk4F7MwP9q generated for C_1u_0402.
+WARNING: Missing tag on SW_TS-1187A-B-A-B instantiated at /home/kamran/projects/hw-lab/experiments/skidl/board.py:23.
+WARNING: Random tag kkcNwQttjN generated for SW_TS-1187A-B-A-B.
+WARNING: Missing tag on SW_TS-1187A-B-A-B instantiated at /home/kamran/projects/hw-lab/experiments/skidl/board.py:23.
+WARNING: Random tag LIrLRc6Jjc generated for SW_TS-1187A-B-A-B.
+WARNING: Missing tag on R_1k_0402 instantiated at /home/kamran/projects/hw-lab/experiments/skidl/board.py:23.
+WARNING: Random tag PXjfVGE2QZ generated for R_1k_0402.
+WARNING: Missing tag on LED_Green_0805 instantiated at /home/kamran/projects/hw-lab/experiments/skidl/board.py:23.
+WARNING: Random tag dM_mJ6Qqx9 generated for LED_Green_0805.
+WARNING: Missing tag on LSM6DSOTR instantiated at /home/kamran/projects/hw-lab/experiments/skidl/board.py:23.
+WARNING: Random tag 8TsENiUXF2 generated for LSM6DSOTR.
+WARNING: Missing tag on C_100n_0402 instantiated at /home/kamran/projects/hw-lab/experiments/skidl/board.py:23.
+WARNING: Random tag nkLBK99LsC generated for C_100n_0402.
+WARNING: Missing tag on C_100n_0402 instantiated at /home/kamran/projects/hw-lab/experiments/skidl/board.py:23.
+WARNING: Random tag ntIE4qck4a generated for C_100n_0402.
+WARNING: Missing tag on R_4k7_0402 instantiated at /home/kamran/projects/hw-lab/experiments/skidl/board.py:23.
+WARNING: Random tag VhuLVxUykL generated for R_4k7_0402.
+WARNING: Missing tag on R_4k7_0402 instantiated at /home/kamran/projects/hw-lab/experiments/skidl/board.py:23.
+WARNING: Random tag LtVLcEA9VA generated for R_4k7_0402.
+WARNING: Missing tag on JST_SH_SM04B-SRSS-TB instantiated at /home/kamran/projects/hw-lab/experiments/skidl/board.py:23.
+WARNING: Random tag m6FPYjO6hF generated for JST_SH_SM04B-SRSS-TB.
+WARNING: Missing tag on  instantiated at /home/kamran/projects/hw-lab/<frozen importlib._bootstrap>:488.
+INFO: 48 warnings found while generating netlist.
+INFO: 0 errors found while generating netlist.
+
