@@ -41,7 +41,12 @@ def main():
     ring = [(r * math.cos(t), r * math.sin(t)) for t in [i * math.pi / 6 for i in range(12)]] + [(0, 0)]
     existing = [t.GetPosition() for t in b.GetTracks() if t.GetClass() == "PCB_VIA"]
     holes = [p.GetPosition() for p in b.GetPads() if p.HasHole()]
-    texts = [d.GetBoundingBox() for d in b.GetDrawings() if d.GetClass() == "PCB_TEXT"]
+    texts = []
+    for d in b.GetDrawings():
+        if d.GetClass() == "PCB_TEXT":
+            box = d.GetBoundingBox()
+            box.Inflate(MM(0.5))  # mutates in place: do it once
+            texts.append(box)
     added = 0
     y = bb.GetTop() + MM(a.pitch / 2)
     while y < bb.GetBottom():
@@ -51,7 +56,7 @@ def main():
             c = pcbnew.VECTOR2I(int(x), int(y))
             near = (any((p - c).EuclideanNorm() < MM(a.pitch / 2) for p in existing)
                     or any((p - c).EuclideanNorm() < MM(1.5) for p in holes)
-                    or any(t.Inflate(MM(0.5)).Contains(c) for t in texts))
+                    or any(t.Contains(c) for t in texts))
             if not near and all(fills[layer].Contains(p) for layer in fills for p in pts):
                 v = pcbnew.PCB_VIA(b)
                 v.SetPosition(pcbnew.VECTOR2I(int(x), int(y)))
@@ -62,9 +67,36 @@ def main():
                 added += 1
             x += MM(a.pitch)
         y += MM(a.pitch)
+    # pass 2: every top-pour island that still has no via/THT gets one, if one fits
+    filler.Fill(b.Zones())
+    fills = {layer: [z for z in b.Zones() if z.GetNetname() == "GND" and z.IsOnLayer(layer)][0].GetFilledPolysList(layer)
+             for layer in (pcbnew.F_Cu, pcbnew.B_Cu)}
+    anchors = [t.GetPosition() for t in b.GetTracks() if t.GetClass() == "PCB_VIA"] + holes
+    top = fills[pcbnew.F_Cu]
+    island_fix = 0
+    for i in range(top.OutlineCount()):
+        outline = top.Outline(i)
+        if any(outline.PointInside(p) for p in anchors):
+            continue
+        bbx = outline.BBox()
+        placed = False
+        yy = bbx.GetTop()
+        while yy < bbx.GetBottom() and not placed:
+            xx = bbx.GetLeft()
+            while xx < bbx.GetRight() and not placed:
+                pts = [pcbnew.VECTOR2I(int(xx + MM(dx)), int(yy + MM(dy))) for dx, dy in ring]
+                if all(outline.PointInside(p) for p in pts) and all(fills[pcbnew.B_Cu].Contains(p) for p in pts) \
+                        and not any((p - pts[-1]).EuclideanNorm() < MM(1.5) for p in holes):
+                    v = pcbnew.PCB_VIA(b)
+                    v.SetPosition(pts[-1]); v.SetWidth(MM(a.via)); v.SetDrill(MM(a.drill)); v.SetNet(gnd)
+                    b.Add(v)
+                    island_fix += 1
+                    placed = True
+                xx += MM(0.5)
+            yy += MM(0.5)
     filler.Fill(b.Zones())
     pcbnew.SaveBoard(a.board, b)
-    print(f"stitching vias added: {added}")
+    print(f"stitching vias added: {added} grid + {island_fix} island")
 
 
 if __name__ == "__main__":

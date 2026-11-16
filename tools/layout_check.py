@@ -50,8 +50,9 @@ def main():
             continue
         d = min(MM((p.GetPosition() - q.GetPosition()).EuclideanNorm()) for p in cp for q in ic_pads)
         worst.append((r, round(d, 2)))
-    far = [w for w in worst if w[1] > a.decap_mm]
-    add("decap", not far, f"distances {worst}; > {a.decap_mm} mm: {far}")
+    small = {r for r, fp in fps.items() if r.startswith("C") and fp.GetValue() in ("100n", "1u")}
+    far = [w for w in worst if (w[1] > a.decap_mm if w[0] in small else w[1] > 10.0)]
+    add("decap", not far, f"distances {worst}; limits {a.decap_mm} mm (<=1u), 10 mm (bulk); too far: {far}")
 
     # connectors / antenna at edges
     def edge_gap(fp):
