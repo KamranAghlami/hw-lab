@@ -76,6 +76,14 @@
         "priority": 0
       },
       {
+        "name": "Supply",
+        "clearance": 0.15,
+        "track_width": 0.3,
+        "via_diameter": 0.6,
+        "via_drill": 0.3,
+        "priority": 1
+      },
+      {
         "name": "USB",
         "clearance": 0.15,
         "track_width": 0.3,
@@ -83,7 +91,7 @@
         "via_drill": 0.3,
         "diff_pair_width": 0.3,
         "diff_pair_gap": 0.2,
-        "priority": 1
+        "priority": 2
       }
     ],
     "meta": {
@@ -95,16 +103,16 @@
         "pattern": "VBUS"
       },
       {
-        "netclass": "Power",
+        "netclass": "Supply",
         "pattern": "+3V3"
       },
       {
-        "netclass": "Power",
+        "netclass": "Supply",
         "pattern": "GND"
       },
       {
         "netclass": "USB",
-        "pattern": "USB_D*"
+        "pattern": "/USB_D*"
       }
     ]
   },

@@ -74,7 +74,7 @@ def new_board(outline):
 def add_gnd_pours(board, outline):
     gnd = board.FindNet("GND")
     x1, y1, x2, y2 = outline
-    for layer in (pcbnew.F_Cu, pcbnew.B_Cu):
+    for layer in (pcbnew.B_Cu,):  # solid bottom GND plane; top is for signals
         z = pcbnew.ZONE(board)
         z.SetLayer(layer)
         z.SetNet(gnd)
@@ -104,15 +104,16 @@ def load_fp(libdir: Path, fpid: str):
 def set_fields(fp, comp):
     fp.SetValue(comp["value"])
     for key, val in comp["fields"].items():
-        if True:
-            try:
-                fp.SetField(key, val)
-                f = fp.GetFieldByName(key)
-                if f is not None:  # like KiCad's own update: extra fields are hidden, on F.Fab
-                    f.SetVisible(False)
-                    f.SetLayer(pcbnew.F_Fab if not fp.IsFlipped() else pcbnew.B_Fab)
-            except Exception as e:  # API drift between versions: record, don't die
-                print(f"  note: SetField({key}) failed: {e}")
+        try:
+            fp.SetField(key, val)
+        except Exception as e:  # API drift between versions: record, don't die
+            print(f"  note: SetField({key}) failed: {e}")
+    # like KiCad's own update: only Reference is on silk; everything else hidden on Fab
+    fab = pcbnew.B_Fab if fp.IsFlipped() else pcbnew.F_Fab
+    for f in fp.GetFields():
+        if f.GetName() not in ("Reference", "Value"):
+            f.SetVisible(False)
+            f.SetLayer(fab)
 
 
 def main():

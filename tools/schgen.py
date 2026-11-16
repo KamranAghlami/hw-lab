@@ -88,6 +88,7 @@ class Part:
     sym: LibSym
     at: tuple[float, float]
     nets: dict[str, str] = field(default_factory=dict)  # pin number -> net
+    nc: set[str] = field(default_factory=set)  # pin numbers explicitly marked no-connect
     rotation: int = 0
 
     def pins_named(self, key: str) -> list[Pin]:
@@ -112,6 +113,19 @@ class Design:
         self.parts[ref] = p
         self.connect(ref, **conn)
         return p
+
+    def no_connect(self, ref: str, *pins: str, rest: bool = False) -> None:
+        """Mark pins as intentionally unconnected (NC flag). `rest=True` marks every
+        pin not yet assigned to a net. Pins that are neither connected nor marked get
+        no flag, so ERC reports them: a forgotten connection can't hide."""
+        part = self.parts[ref]
+        for key in pins:
+            found = part.pins_named(key)
+            if not found:
+                raise KeyError(f"{ref}: no pin {key!r}")
+            part.nc.update(p.number for p in found)
+        if rest:
+            part.nc.update(p.number for p in part.sym.pins if p.number not in part.nets)
 
     def connect(self, ref: str, mapping: dict[str, str] | None = None, **conn: str) -> None:
         part = self.parts[ref]
@@ -178,7 +192,7 @@ class Design:
             for pt, (pin, net) in sorted(points.items()):
                 key = (ref, pin.number)
                 if net is None:
-                    if pin.etype != "no_connect" and not part.sym.power:
+                    if pin.number in part.nc:
                         items.append((ORDER["no_connect"], uid("nc", *key),
                                       S("no_connect", S("at", *pt), S("uuid", uid("nc", *key)))))
                     continue

@@ -1,6 +1,6 @@
 (version 1)
 
-# Power nets must be wide enough for USB current (500 mA+ peaks with ESP32 RF).
+# VBUS (net class Power) must be wide enough for USB current (500 mA+ with ESP32 RF peaks).
 # Net class widths are only defaults for the router; this rule makes DRC enforce it.
 (rule "power_track_width"
 	(condition "A.hasNetclass('Power') && A.Type == 'Track'")

@@ -1,0 +1,94 @@
+# KiBot outputs for hw-lab (ERC/DRC gating is done separately with kicad-cli +
+# tools/check_report.py so waivers are semantic; see .github/workflows/hardware.yml).
+#   kibot -c hardware/hwlab.kibot.yaml -e hardware/hwlab.kicad_sch -b hardware/hwlab.kicad_pcb -d out
+# DIFF_OLD (git ref to diff against) is passed with -E DIFF_OLD=<sha>.
+kibot:
+  version: 1
+
+global:
+  # keep file names stable so the release zip and reviewers know where to look
+  output: '%f-%i%I%v.%x'
+
+import:
+  - file: JLCPCB
+    definitions:
+      _KIBOT_MANF_DIR: fab
+      _KIBOT_MANF_DIR_COMP: fab
+      _KIBOT_PLOT_FOOTPRINT_REFS: true
+      _KIBOT_PLOT_FOOTPRINT_VALUES: false
+
+preflight:
+  # stamp the commit into the title block / silkscreen text variable ${GIT_HASH}
+  set_text_variables:
+    - name: GIT_HASH
+      command: git log -1 --format=%h
+
+outputs:
+  - name: schematic_pdf
+    comment: Schematic PDF
+    type: pdf_sch_print
+    dir: docs
+
+  - name: netlist
+    comment: KiCad netlist (input for the agent review and the pin-map check)
+    type: netlist
+    dir: docs
+
+  - name: ibom
+    comment: Interactive HTML BOM
+    type: ibom
+    dir: assembly
+    options:
+      extra_fields: LCSC,MPN
+      dark_mode: false
+      layer_view: FB
+
+  - name: render_top
+    comment: 3D render, top
+    type: render_3d
+    dir: img
+    options: {view: top, ray_tracing: false, width: 1600, height: 2000, zoom: 1}
+
+  - name: render_bottom
+    comment: 3D render, bottom
+    type: render_3d
+    dir: img
+    options: {view: bottom, ray_tracing: false, width: 1600, height: 2000, zoom: 1}
+
+  - name: render_iso
+    comment: 3D render, isometric
+    type: render_3d
+    dir: img
+    options: {view: top, rotate_x: 3, rotate_z: -2, ray_tracing: false, width: 1600, height: 1200}
+
+  - name: step
+    comment: STEP model of the assembly
+    type: step
+    dir: 3d
+
+  - name: diff_pcb
+    comment: Visual PCB diff against DIFF_OLD
+    type: diff
+    dir: diff
+    options:
+      pcb: true
+      old: '@DIFF_OLD@'
+      old_type: git
+      new_type: current
+      only_different: true
+      add_link_id: false
+
+  - name: diff_sch
+    comment: Visual schematic diff against DIFF_OLD
+    type: diff
+    dir: diff
+    options:
+      pcb: false
+      old: '@DIFF_OLD@'
+      old_type: git
+      new_type: current
+      only_different: true
+
+...
+definitions:
+  DIFF_OLD: HEAD~1
