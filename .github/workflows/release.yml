@@ -1,0 +1,34 @@
+# hw-vX.Y tag -> run the full hardware pipeline, then attach the fab package to a release.
+name: release
+on:
+  push:
+    tags: ["hw-v*"]
+permissions:
+  contents: write
+  packages: read
+jobs:
+  build:
+    uses: ./.github/workflows/hardware.yml
+    secrets: inherit
+  release:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with: {path: dl}
+      - name: Package and publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -e
+          ls -R dl | head -60
+          cd dl
+          zip -qr ../hwlab-$TAG-complete.zip outputs reports
+          cd ..
+          cp dl/outputs/fab/*JLCPCB*.zip hwlab-$TAG-jlcpcb-gerbers-drill.zip
+          cp dl/outputs/fab/*bom*jlc*.csv hwlab-$TAG-jlcpcb-bom.csv
+          cp dl/outputs/fab/*cpl_jlc*.csv hwlab-$TAG-jlcpcb-cpl.csv
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --title "$TAG" \
+            --notes "Fab package for $TAG (commit $GITHUB_SHA). JLCPCB: upload the gerbers zip, then BOM + CPL for assembly. The complete zip has PDFs, iBOM, renders, STEP, reports and diffs." \
+            hwlab-$TAG-*

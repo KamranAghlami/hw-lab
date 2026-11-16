@@ -1,19 +1,21 @@
-# Hardware CI: gates (regen, ERC, DRC, pin map) + fab/review outputs (KiBot),
-# and a GitHub release with the complete fab package on hw-vX.Y tags.
+# Hardware CI: gates (regen, overlap lint, ERC, pin map, DRC) + fab/review outputs (KiBot).
+# Releases: see release.yml (calls this workflow on hw-v* tags).
 name: hardware
 on:
   push:
     branches: [main]
-    tags: ["hw-v*"]
+    paths: ["hardware/**", "tools/**", "firmware/include/**", ".github/workflows/hardware.yml"]
   pull_request:
+    paths: ["hardware/**", "tools/**", "firmware/include/**", ".github/workflows/hardware.yml"]
   workflow_dispatch:
+  workflow_call:   # used by release.yml on hw-v* tags
 
 concurrency:
   group: hardware-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
-  contents: write   # release job
+  contents: read
   packages: read    # pull the CI image from GHCR
 
 env:
@@ -86,26 +88,3 @@ jobs:
           name: outputs
           path: out
           retention-days: 14
-
-  release:
-    if: startsWith(github.ref, 'refs/tags/hw-v')
-    needs: [checks, outputs]
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/download-artifact@v4
-        with: {path: dl}
-      - name: Package and publish
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.ref_name }}
-        run: |
-          set -e
-          cd dl
-          zip -qr ../hwlab-$TAG-complete.zip outputs reports
-          cp outputs/fab/*_JLCPCB_compress*.zip ../hwlab-$TAG-jlcpcb-gerbers.zip
-          cp outputs/fab/*bom_jlc.csv ../hwlab-$TAG-jlcpcb-bom.csv
-          cp outputs/fab/*cpl_jlc.csv ../hwlab-$TAG-jlcpcb-cpl.csv
-          cd ..
-          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --title "$TAG" \
-            --notes "Fab package for $TAG ($GITHUB_SHA). JLCPCB: upload the gerbers zip, BOM and CPL." \
-            hwlab-$TAG-*.zip hwlab-$TAG-*.csv
