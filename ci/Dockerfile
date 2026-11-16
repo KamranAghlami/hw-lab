@@ -15,4 +15,7 @@ RUN python3 -m venv --system-site-packages /opt/kibot \
 # Freerouting for the optional autoroute job (Java 21 => v2.1.0)
 RUN curl -sSL -o /opt/freerouting.jar \
       https://github.com/freerouting/freerouting/releases/download/v2.1.0/freerouting-2.1.0.jar
+# KiBot looks for `generate_interactive_bom.py` and otherwise DOWNLOADS it from GitHub at
+# run time (flaky; failed the first hw-v0.1 release). Point it at the pinned pip install.
+RUN ln -s /opt/kibot/bin/generate_interactive_bom /usr/local/bin/generate_interactive_bom.py
 ENV PATH=/opt/kibot/bin:$PATH
