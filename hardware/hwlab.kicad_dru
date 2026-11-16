@@ -4,7 +4,8 @@
 # Net class widths are only defaults for the router; this rule makes DRC enforce it.
 (rule "power_track_width"
 	(condition "A.hasNetclass('Power') && A.Type == 'Track'")
-	(constraint track_width (min 0.4mm)))
+	(constraint track_width (min 0.4mm))
+	(severity error))
 
 # JLCPCB 2-layer standard capabilities (with margin)
 (rule "jlc_hole_to_hole"

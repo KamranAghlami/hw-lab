@@ -37,7 +37,20 @@
           "diameter": 0.6,
           "drill": 0.3
         }
-      ]
+      ],
+      "rule_severities": {
+        "starved_thermal": "error",
+        "courtyards_overlap": "error",
+        "track_width": "error",
+        "clearance": "error",
+        "copper_edge_clearance": "error",
+        "hole_clearance": "error",
+        "unconnected_items": "error",
+        "lib_footprint_mismatch": "warning",
+        "silk_overlap": "warning",
+        "silk_over_copper": "warning",
+        "silk_edge_clearance": "warning"
+      }
     }
   },
   "erc": {

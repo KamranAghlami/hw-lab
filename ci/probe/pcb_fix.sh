@@ -11,9 +11,10 @@ for t in b.GetTracks():
         for p in (t.GetStart(), t.GetEnd()):
             ends[(p.x, p.y)] = ends.get((p.x, p.y), 0) + 1
 pads = [p for p in b.GetPads() if p.GetNetname() == 'GND']
+vias = {(t.GetPosition().x, t.GetPosition().y) for t in b.GetTracks() if t.GetClass() == 'PCB_VIA'}
 added = 0
 for (x, y), n in ends.items():
-    if n != 1:
+    if n != 1 or (x, y) in vias:
         continue
     pt = pcbnew.VECTOR2I(x, y)
     if any(p.HitTest(pt) for p in pads):

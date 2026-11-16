@@ -9,7 +9,7 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 # venv sees the system pcbnew module (--system-site-packages); never pip into system python
 RUN python3 -m venv --system-site-packages /opt/kibot \
- && /opt/kibot/bin/pip install --no-cache-dir \
+ && /opt/kibot/bin/pip install --no-cache-dir --no-compile \
       kibot==1.9.1 kiauto InteractiveHtmlBom==2.12.0 kidiff==2.6.0
 # Freerouting for the optional autoroute job (Java 21 => v2.1.0)
 RUN curl -sSL -o /opt/freerouting.jar \
