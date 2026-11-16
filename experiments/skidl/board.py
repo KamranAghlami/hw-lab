@@ -68,8 +68,12 @@ if __name__ == "__main__":
     out = HERE / "out"
     out.mkdir(exist_ok=True)
     generate_netlist(file_=str(out / "hwlab.net"))
-    try:
-        generate_schematic(filepath=str(out), top_name="hwlab", title="hw-lab (SKiDL)")
-    except Exception as e:  # record, don't hide
-        print("generate_schematic FAILED:", type(e).__name__, e)
-        raise
+    import time
+    for opts in ({}, {"auto_stub": True}, {"auto_stub": True, "flatness": 1.0, "retries": 5}):
+        t0 = time.time()
+        try:
+            generate_schematic(filepath=str(out), top_name="hwlab", title="hw-lab (SKiDL)", **opts)
+            print(f"generate_schematic OK with {opts} in {time.time() - t0:.0f}s")
+            break
+        except Exception as e:  # record, don't hide
+            print(f"generate_schematic FAILED with {opts} after {time.time() - t0:.0f}s:", type(e).__name__, e)
