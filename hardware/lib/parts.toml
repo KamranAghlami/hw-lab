@@ -30,6 +30,8 @@ lcsc = "C2913198"  # extended
 # datasheet (ESP32-S3-WROOM-1 v1.x, table "Pin Definitions"): pad -> name; "|" = accepted aliases
 datasheet_pins = { "1" = "GND", "2" = "3V3", "3" = "EN", "13" = "IO19|USB_D-", "14" = "IO20|USB_D+", "27" = "IO0", "36" = "RXD0", "37" = "TXD0", "40" = "GND", "41" = "GND" }
 decap = { "3V3" = ["100n", "10u"] }
+# EN (CHIP_PU) has no internal pull-up: datasheet RC = 10k to 3V3 + 1u to GND
+pull = { "EN" = "10k +3V3" }
 
 [[part]]
 name = "AMS1117-3.3"
@@ -54,6 +56,8 @@ description = "iNEMO 6DoF IMU, accelerometer + gyroscope, I2C/SPI/I3C, 1.71-3.6V
 pin_names = { "10" = "OCS_Aux", "11" = "SDO_Aux" }
 datasheet_pins = { "1" = "SDO/SA0", "2" = "SDX", "3" = "SCX", "4" = "INT1", "5" = "VDDIO", "6" = "GND", "7" = "GND", "8" = "VDD", "9" = "INT2", "10" = "OCS_Aux", "11" = "SDO_Aux", "12" = "CS", "13" = "SCL", "14" = "SDA" }
 decap = { "VDD" = ["100n"], "VDDIO" = ["100n"] }
+# I2C open-drain: external pull-ups to the I/O rail ("|" = accepted values)
+pull = { "SDA" = "2k2|4k7|10k +3V3", "SCL" = "2k2|4k7|10k +3V3" }
 
 # ---- connectors / switches / LED -------------------------------------------
 [[part]]
@@ -63,6 +67,8 @@ footprint = "Connector_USB:USB_C_Receptacle_HRO_TYPE-C-31-M-12"
 manufacturer = "Korean Hroparts Elec"
 mpn = "TYPE-C-31-M-12"
 lcsc = "C165948"  # extended
+# USB-C sink: Rd = 5.1k to GND on each CC pin (USB Type-C spec, sink role)
+pull = { "CC1" = "5k1 GND", "CC2" = "5k1 GND" }
 
 [[part]]
 name = "JST_SH_SM04B-SRSS-TB"
@@ -89,6 +95,8 @@ manufacturer = "Hubei KENTO Elec"
 mpn = "KT-0805G"
 lcsc = "C2297"  # basic
 datasheet_pins = { "1" = "K", "2" = "A" }  # KiCad LED footprint: pad 1 = cathode
+# polarity: anode never on GND, cathode never on a supply rail (catches a reversed low-side LED)
+forbid_net = { "A" = "GND", "K" = "+3V3|VBUS" }
 
 # ---- passives -------------------------------------------------------------------
 [[part]]

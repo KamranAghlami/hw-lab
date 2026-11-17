@@ -3,7 +3,7 @@
 o=$PWD/out
 cd hardware
 kicad-cli pcb drc --severity-all --schematic-parity --format json -o $o/drc-before.json hwlab.kicad_pcb >/dev/null
-python3 ../tools/gnd_fanout.py hwlab.kicad_pcb; echo "fanout rc=$?"
+python3 ../tools/gnd_fanout.py hwlab.kicad_pcb --width 0.2 --clearance 0.18; echo "fanout rc=$?"
 python3 ../tools/fix_labels.py hwlab.kicad_pcb; echo "labels rc=$?"
 kicad-cli pcb drc --severity-all --schematic-parity --refill-zones --format json -o $o/drc-after.json hwlab.kicad_pcb >/dev/null
 for f in before after; do echo "== DRC $f"; python3 - $o/drc-$f.json <<'PY'

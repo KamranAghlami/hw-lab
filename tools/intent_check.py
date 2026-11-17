@@ -13,12 +13,18 @@ facts recorded per part in parts.toml:
   decap    `decap = { "<pin name>" = ["100n", ...] }`: for every instance, each
            listed value must be present as a capacitor on that pin's net. Caps
            are counted per net and shared requirements must all be met.
+  pull     `pull = { "<pin name>" = "<value>[|<value>...] <rail net>" }`: a
+           resistor of one of those values must join that pin's net to the rail
+           (EN pull-up, USB-C Rd, I2C pull-ups).
+  forbid   `forbid_net = { "<pin name>" = "<net>[|<net>...]" }`: the pin must not
+           sit on any of those nets (LED anode on GND = reversed LED).
 Exit 1 on any failure. Stdlib only.
 """
 from __future__ import annotations
 
 import argparse
 import collections
+import re
 import sys
 import tomllib
 from pathlib import Path
@@ -31,6 +37,18 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def norm(s: str) -> str:
     return s.strip().upper()
+
+
+MULT = {"R": 1, "": 1, "K": 1e3, "M": 1e6}
+
+
+def ohms(s: str) -> float | None:
+    """'5k1', '5.1k', '4K7', '470R', '470', '1M' -> ohms; None if not a resistance."""
+    m = re.fullmatch(r"(\d+)([RKM])(\d*)", norm(s).replace("Ω", ""))
+    if m:
+        return float(f"{m[1]}.{m[3] or 0}") * MULT[m[2]]
+    m = re.fullmatch(r"(\d+(?:\.\d+)?)([KM]?)(?:OHMS?)?", norm(s).replace("Ω", ""))
+    return float(m[1]) * MULT[m[2]] if m else None
 
 
 def main() -> int:
@@ -49,6 +67,7 @@ def main() -> int:
         comps[ref] = {"part": str(k.find(src, "part")[1]) if src else "", "value": str(k.find(c, "value")[1]),
                       "footprint": str(k.find(c, "footprint")[1])}
     pin_net, pin_fn = {}, {}
+    comp_nets = collections.defaultdict(dict)  # ref -> pin -> net
     net_members = collections.defaultdict(list)
     for n in k.children(k.find(t, "nets"), "net"):
         name = str(k.find(n, "name")[1])
@@ -59,6 +78,7 @@ def main() -> int:
             if fn.endswith("_" + pin):
                 fn = fn[: -len(pin) - 1]
             pin_net[(ref, pin)] = name
+            comp_nets[ref][pin] = name
             pin_fn[(ref, pin)] = fn
             net_members[name].append(ref)
 
@@ -96,6 +116,31 @@ def main() -> int:
             for v in values:
                 need[net][v] += 1
                 who[(net, v)].append(f"{ref}.{pin_name}")
+        for pin_name, rule in p.get("pull", {}).items():
+            values, rail = rule.rsplit(" ", 1)
+            ok_vals = {ohms(v) for v in values.split("|")}
+            pins = [pn for (r, pn), fn in pin_fn.items() if r == ref and norm(fn) == norm(pin_name)]
+            if not pins:
+                fails.append(f"pull {ref}: no pin named {pin_name}")
+                continue
+            net = pin_net[(ref, pins[0])]
+            res = [r for r, nets in comp_nets.items() if r.startswith("R") and len(nets) == 2
+                   and set(nets.values()) == {net, rail}]
+            good = [r for r in res if ohms(comps[r]["value"]) in ok_vals]
+            if good:
+                oks += 1
+            elif res:
+                fails.append(f"pull {ref}.{pin_name} (net {net}): {', '.join(r + '=' + comps[r]['value'] for r in res)} "
+                             f"to {rail}, expected {values}")
+            else:
+                fails.append(f"pull {ref}.{pin_name} (net {net}): no resistor to {rail} (expected {values})")
+        for pin_name, bad in p.get("forbid_net", {}).items():
+            for (r, pn), fn in pin_fn.items():
+                if r == ref and norm(fn) == norm(pin_name):
+                    if pin_net[(r, pn)] in bad.split("|"):
+                        fails.append(f"forbid {ref}.{pin_name} is on {pin_net[(r, pn)]} (must not be on {bad})")
+                    else:
+                        oks += 1
     for net, req in need.items():
         have = collections.Counter(comps[r]["value"] for r in set(net_members[net]) if r.startswith("C"))
         for v, n in req.items():
