@@ -2,7 +2,12 @@
 # Review material is uploaded under random codes so the agent can review it
 # before looking at the code -> variant mapping (in the `results` artifact).
 name: planted
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      set:
+        description: "v1 = one mistake per board (brief's list); blind2 = 0-3 mistakes per board, incl. unlisted types"
+        default: v1
 permissions:
   contents: read
   packages: read
@@ -16,8 +21,15 @@ jobs:
         run: |
           python3 - >> "$GITHUB_OUTPUT" <<'PY'
           import json, random, string
-          vs = ["control", "swap_txrx", "missing_decap", "wrong_pinout", "floating_pin", "narrow_vbus"]
+          sets = {
+            "v1": ["control", "swap_txrx", "missing_decap", "wrong_pinout", "floating_pin", "narrow_vbus"],
+            "blind2": ["control", "cc_rd_10k", "led_reversed+swap_txrx",
+                       "usb_dpdn_swapped+narrow_vbus+no_i2c_pullups", "floating_pin+ldo_cap_small",
+                       "en_no_pullup+wrong_pinout"],
+          }
+          vs = sets["${{ inputs.set }}"]
           codes = random.sample([f"R{n:02d}" for n in range(10, 100)], len(vs))
+          random.shuffle(vs)
           print("matrix=" + json.dumps({"include": [{"variant": v, "code": c} for v, c in zip(vs, codes)]}))
           PY
   plant:

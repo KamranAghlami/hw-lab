@@ -1,15 +1,22 @@
 #!/usr/bin/env python3
 """Plant one known mistake into a copy of the project, then run the CI gates on it.
 
-    plant.py <variant> <outdir>      (runs in the CI image: needs kicad-cli + pcbnew)
+    plant.py <variant>[+<variant>...] <outdir>   (runs in the CI image: needs kicad-cli + pcbnew)
 
-Variants (the brief's list) + a clean control:
+Several mistakes can be combined with "+". Mistakes (the brief's list) + a clean control:
   control        nothing changed
   swap_txrx      ESP32 TXD0/RXD0 nets swapped (UART_TX <-> UART_RX)
   missing_decap  IMU decoupling caps C5, C6 removed (schematic + PCB)
   wrong_pinout   AMS1117 symbol pin numbers for VI/VO swapped (lib error, as from a bad import)
   floating_pin   IMU CS (I2C/SPI mode select) left unconnected
   narrow_vbus    VBUS tracks routed at 0.15 mm
+Not on the brief's list (added for the blind review, 2026-11-17):
+  cc_rd_10k        USB-C CC pull-downs R1/R2 are 10k instead of 5.1k
+  led_reversed     D1 anode/cathode nets swapped
+  usb_dpdn_swapped ESP32 USB_D+/USB_D- nets swapped at the module
+  no_i2c_pullups   I2C pull-ups R4/R5 removed
+  ldo_cap_small    LDO output cap C2 is 100n 0402 instead of 22u 0805
+  en_no_pullup     EN pull-up R3 removed
 Writes <outdir>/result.json with what each gate said.
 """
 from __future__ import annotations
@@ -38,15 +45,27 @@ def load_design(hw: Path):
     return mod.d
 
 
+def swap_part(d, ref: str, symbol: str) -> None:
+    """Replace ref's library part (value/footprint), keeping position and nets."""
+    old = d.parts.pop(ref)
+    new = d.part(ref, symbol, old.at, **dict(old.nets))
+    new.rotation, new.nc = old.rotation, old.nc
+
+
 def main() -> None:
     variant, out = sys.argv[1], Path(sys.argv[2]).resolve()
+    mistakes = set(variant.split("+")) - {"control"}
+    known = {"swap_txrx", "missing_decap", "wrong_pinout", "floating_pin", "narrow_vbus", "cc_rd_10k",
+             "led_reversed", "usb_dpdn_swapped", "no_i2c_pullups", "ldo_cap_small", "en_no_pullup"}
+    if mistakes - known:
+        raise SystemExit(f"unknown mistake(s): {mistakes - known}")
     hw = out / "hardware"
     shutil.rmtree(out, ignore_errors=True)
     shutil.copytree(ROOT / "hardware", hw, ignore=shutil.ignore_patterns(".cache"))
     (out / "firmware").mkdir()
     shutil.copytree(ROOT / "firmware/include", out / "firmware/include")
 
-    if variant == "wrong_pinout":
+    if "wrong_pinout" in mistakes:
         lib = hw / "lib/hwlab.kicad_sym"
         txt = lib.read_text()
         start = txt.index('(symbol "AMS1117-3.3"')
@@ -56,13 +75,34 @@ def main() -> None:
         lib.write_text(txt[:start] + block + txt[end:])
 
     d = load_design(hw)
-    if variant == "swap_txrx":
+    if "swap_txrx" in mistakes:
         u1 = d.parts["U1"]
         u1.nets["37"], u1.nets["36"] = "UART_RX", "UART_TX"
-    elif variant == "missing_decap":
+    if "missing_decap" in mistakes:
         del d.parts["C5"], d.parts["C6"]
-    elif variant == "floating_pin":
+    if "floating_pin" in mistakes:
         del d.parts["U3"].nets["12"]
+    if "cc_rd_10k" in mistakes:
+        for ref in ("R1", "R2"):
+            swap_part(d, ref, "R_10k_0402")
+    if "led_reversed" in mistakes:
+        n = d.parts["D1"].nets
+        a, b = sorted(n)
+        n[a], n[b] = n[b], n[a]
+    if "usb_dpdn_swapped" in mistakes:
+        n = d.parts["U1"].nets
+        dp = [p for p, v in n.items() if v == "USB_DP"]
+        dn = [p for p, v in n.items() if v == "USB_DN"]
+        for p in dp:
+            n[p] = "USB_DN"
+        for p in dn:
+            n[p] = "USB_DP"
+    if "no_i2c_pullups" in mistakes:
+        del d.parts["R4"], d.parts["R5"]
+    if "ldo_cap_small" in mistakes:
+        swap_part(d, "C2", "C_100n_0402")
+    if "en_no_pullup" in mistakes:
+        del d.parts["R3"]
     d.write(hw / "hwlab.kicad_sch")
 
     sch, pcb = hw / "hwlab.kicad_sch", hw / "hwlab.kicad_pcb"
@@ -70,7 +110,7 @@ def main() -> None:
     sh("kicad-cli", "sch", "export", "netlist", "--format", "kicadsexpr", "-o", str(net), str(sch))
     rc, log = sh("python3", str(ROOT / "tools/pcb_sync.py"), str(net), str(pcb))
     print(log)
-    if variant == "narrow_vbus":
+    if "narrow_vbus" in mistakes:
         import pcbnew
         b = pcbnew.LoadBoard(str(pcb))
         n = 0
@@ -111,6 +151,7 @@ def main() -> None:
     rv = out / "review"
     rv.mkdir()
     shutil.copy(net, rv / "hwlab.net")
+    shutil.copy(hw / "lib/parts.toml", rv / "parts.toml")
     sh("kicad-cli", "sch", "export", "pdf", "-o", str(rv / "schematic.pdf"), str(sch))
     for side in ("top", "bottom"):
         sh("kicad-cli", "pcb", "render", "--side", side, "-w", "1200", "-h", "1600", "-o", str(rv / f"render-{side}.png"), str(pcb))
