@@ -93,8 +93,8 @@ def main() -> int:
         p0 = p.GetPosition()
         for k in range(4, int(a.max_reach / 0.1) + 1):
             rad = MM(k * 0.1)
-            for j in range(24):
-                t = j * math.pi / 12
+            for j in range(8):  # 45-degree directions only
+                t = j * math.pi / 4
                 c = pcbnew.VECTOR2I(int(p0.x + rad * math.cos(t)), int(p0.y + rad * math.sin(t)))
                 if via_ok(c, p) and track_ok(p0, c, p):
                     return c
@@ -154,8 +154,8 @@ def main() -> int:
                 p0 = p.GetPosition()
                 for k in range(4, int(a.max_reach / 0.1) + 1):
                     rad = MM(k * 0.1)
-                    for j in range(24):
-                        t = j * math.pi / 12
+                    for j in range(8):  # 45-degree directions only
+                        t = j * math.pi / 4
                         c = pcbnew.VECTOR2I(int(p0.x + rad * math.cos(t)), int(p0.y + rad * math.sin(t)))
                         if via_ok(c, p) and track_ok(p0, c, p):
                             best = (p, c)

@@ -57,5 +57,5 @@ for sec in ("violations", "unconnected_items", "schematic_parity"):
 for k, n in sorted(c.items()): print(n, *k)
 PY
 python3 ../tools/check_report.py drc $o/drc.json --allow-warnings; echo "gate (no waivers) rc=$?"
-python3 ../tools/layout_check.py hwlab.kicad_pcb --gate decap edges antenna | tail -4
+python3 ../tools/layout_check.py hwlab.kicad_pcb --gate decap edges antenna | tail -8
 cp hwlab.kicad_pcb $o/
