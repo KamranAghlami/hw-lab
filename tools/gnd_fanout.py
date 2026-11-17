@@ -46,7 +46,6 @@ def main() -> int:
     filler.Fill(b.Zones())
     gnd = b.FindNet("GND")
     top_zone = [z for z in b.Zones() if z.GetNetname() == "GND" and z.IsOnLayer(pcbnew.F_Cu) and not z.GetIsRuleArea()][0]
-    top = top_zone.GetFilledPolysList(pcbnew.F_Cu)
     outline = pcbnew.SHAPE_POLY_SET()
     b.GetBoardPolygonOutlines(outline, True)
 
@@ -81,53 +80,82 @@ def main() -> int:
         seg = pcbnew.SHAPE_SEGMENT(p0, c, w)
         return not any(s.Collide(seg, clr) for _, s in others[pcbnew.F_Cu])
 
-    fixed, failed = 0, 0
-    for i in range(top.OutlineCount()):
-        frag = top.Outline(i)
-        if any(frag.PointInside(p) for p in anchors):
-            continue
-        fpads = [p for p in pads if p.GetNetname() == "GND" and p.IsOnLayer(pcbnew.F_Cu) and frag.PointInside(p.GetPosition())]
-        name = ", ".join(f"{p.GetParentFootprint().GetReference()}.{p.GetNumber()}" for p in fpads) or "no pads"
-        if not fpads:
-            print(f"fragment {i}: no pads, no via ({name}); left for island removal")
-            continue
-        best = None
-        for p in fpads:
-            p0 = p.GetPosition()
-            steps = int(a.max_reach / 0.1)
-            for k in range(4, steps + 1):
-                rad = MM(k * 0.1)
-                for j in range(24):
-                    t = j * math.pi / 12
-                    c = pcbnew.VECTOR2I(int(p0.x + rad * math.cos(t)), int(p0.y + rad * math.sin(t)))
-                    if via_ok(c, p) and track_ok(p0, c, p):
-                        best = (p, c)
+    def add_track(p0, c):
+        t = pcbnew.PCB_TRACK(b)
+        t.SetStart(p0); t.SetEnd(c); t.SetWidth(w); t.SetLayer(pcbnew.F_Cu); t.SetNet(gnd)
+        b.Add(t)
+
+    def ref(p):
+        return f"{p.GetParentFootprint().GetReference()}.{p.GetNumber()}"
+
+    fixed, failed = 0, []
+    for rnd in range(4):  # a joined fragment can become the target of the next one
+        filler.Fill(b.Zones())
+        top = top_zone.GetFilledPolysList(pcbnew.F_Cu)
+        frags = [top.Outline(i) for i in range(top.OutlineCount())]
+        gpads = [p for p in pads if p.GetNetname() == "GND" and p.IsOnLayer(pcbnew.F_Cu)]
+        stranded = [f for f in frags if not any(f.PointInside(p) for p in anchors)]
+        stranded = [(f, [p for p in gpads if f.PointInside(p.GetPosition())]) for f in stranded]
+        stranded = [(f, fp) for f, fp in stranded if fp]  # pad-less islands: island removal handles them
+        if not stranded:
+            break
+        # targets for a plain F.Cu track: GND vias/THT and GND pads on anchored fragments
+        anchored_pads = [p.GetPosition() for p in gpads
+                         if not any(p in fp for _, fp in stranded)]
+        targets = anchors + anchored_pads
+        progress = False
+        for frag, fpads in stranded:
+            name = ", ".join(ref(p) for p in fpads)
+            # 1) join: straight F.Cu track from one of its pads to the nearest reachable GND anchor
+            best = None
+            for p in fpads:
+                p0 = p.GetPosition()
+                for c in targets:
+                    dist = (c - p0).EuclideanNorm()
+                    if dist <= MM(a.max_reach) and not frag.PointInside(c) and track_ok(p0, c, p):
+                        if best is None or dist < best[2]:
+                            best = (p, c, dist)
+            if best:
+                p, c, dist = best
+                add_track(p.GetPosition(), c)
+                anchors.append(p.GetPosition())  # this fragment now counts as connected
+                fixed += 1; progress = True
+                print(f"{name}: joined {ref(p)} by a {pcbnew.ToMM(dist):.2f} mm F.Cu track to GND at "
+                      f"({pcbnew.ToMM(c.x):.2f}, {pcbnew.ToMM(c.y):.2f})")
+                continue
+            # 2) fan-out: short track to a new via down to the B.Cu plane
+            for p in fpads:
+                p0 = p.GetPosition()
+                for k in range(4, int(a.max_reach / 0.1) + 1):
+                    rad = MM(k * 0.1)
+                    for j in range(24):
+                        t = j * math.pi / 12
+                        c = pcbnew.VECTOR2I(int(p0.x + rad * math.cos(t)), int(p0.y + rad * math.sin(t)))
+                        if via_ok(c, p) and track_ok(p0, c, p):
+                            best = (p, c)
+                            break
+                    if best:
                         break
                 if best:
                     break
             if best:
-                break
-        if not best:
-            print(f"fragment {i} ({name}): NO fan-out spot within {a.max_reach} mm")
-            failed += 1
-            continue
-        p, c = best
-        t = pcbnew.PCB_TRACK(b)
-        t.SetStart(p.GetPosition()); t.SetEnd(c); t.SetWidth(w); t.SetLayer(pcbnew.F_Cu); t.SetNet(gnd)
-        b.Add(t)
-        v = pcbnew.PCB_VIA(b)
-        v.SetPosition(c); v.SetWidth(MM(a.via)); v.SetDrill(MM(a.drill)); v.SetNet(gnd)
-        b.Add(v)
-        # later fan-outs must clear what was just added (it is GND, so only the hole matters)
-        holes.append((c, drill))
-        anchors.append(c)
-        fixed += 1
-        print(f"fragment {i} ({name}): fan-out from {p.GetParentFootprint().GetReference()}.{p.GetNumber()} "
-              f"to via at ({pcbnew.ToMM(c.x):.2f}, {pcbnew.ToMM(c.y):.2f}), "
-              f"{pcbnew.ToMM((c - p.GetPosition()).EuclideanNorm()):.2f} mm")
+                p, c = best
+                add_track(p.GetPosition(), c)
+                v = pcbnew.PCB_VIA(b)
+                v.SetPosition(c); v.SetWidth(MM(a.via)); v.SetDrill(MM(a.drill)); v.SetNet(gnd)
+                b.Add(v)
+                holes.append((c, drill)); anchors.append(c)
+                fixed += 1; progress = True
+                print(f"{name}: fan-out from {ref(p)} to new via at ({pcbnew.ToMM(c.x):.2f}, {pcbnew.ToMM(c.y):.2f}), "
+                      f"{pcbnew.ToMM((c - p.GetPosition()).EuclideanNorm()):.2f} mm")
+        if not progress:
+            failed = [", ".join(ref(p) for p in fp) for _, fp in stranded]
+            break
+    for name in failed:
+        print(f"{name}: NO join or fan-out within {a.max_reach} mm")
     filler.Fill(b.Zones())
     pcbnew.SaveBoard(a.board, b)
-    print(f"gnd fan-out: {fixed} fixed, {failed} not fixable")
+    print(f"gnd fan-out: {fixed} fixed, {len(failed)} not fixable")
     return 1 if failed else 0
 
 
