@@ -35,7 +35,7 @@ def main() -> int:
     b = pcbnew.LoadBoard(a.board)
     gap = MM(a.gap)
     edge = pcbnew.SHAPE_POLY_SET()
-    b.GetBoardPolygonOutlines(edge)
+    b.GetBoardPolygonOutlines(edge, True)
     edge.Deflate(MM(a.edge), pcbnew.CORNER_STRATEGY_ROUND_ALL_CORNERS if hasattr(pcbnew, "CORNER_STRATEGY_ROUND_ALL_CORNERS") else 0, 16)
 
     fps = list(b.GetFootprints())

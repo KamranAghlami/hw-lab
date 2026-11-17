@@ -48,7 +48,7 @@ def main() -> int:
     top_zone = [z for z in b.Zones() if z.GetNetname() == "GND" and z.IsOnLayer(pcbnew.F_Cu) and not z.GetIsRuleArea()][0]
     top = top_zone.GetFilledPolysList(pcbnew.F_Cu)
     outline = pcbnew.SHAPE_POLY_SET()
-    b.GetBoardPolygonOutlines(outline)
+    b.GetBoardPolygonOutlines(outline, True)
 
     layers = (pcbnew.F_Cu, pcbnew.B_Cu)
     pads = list(b.GetPads())
