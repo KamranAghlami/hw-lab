@@ -14,8 +14,12 @@ All numbers below come from runs in this repo (`gh run view <id>`) unless stated
 - **Gates that work (layered):** regen check → overlap lint → ERC → pin map → design-intent check →
   DRC with custom rules. Each layer catches something the others can't (table in §4).
 - **The planted mistakes:** every one was caught by some automated gate *before layout*, except the
-  narrow power trace, which DRC catches at layout time **only** with a custom rule. Agent
-  review of PDF/netlist/renders matched all 6 coded variants, but that review was not truly blind.
+  narrow power trace, which DRC catches at layout time **only** with a custom rule.
+- **Blind review (§4.3):** a fresh subagent that had only the review files and a one-page spec found
+  **11/11** mistakes on 6 boards (0–3 each, 6 types not on the brief's list), with **0 false alarms**,
+  and passed the clean board. The gates missed 3 of the 11 (wrong CC resistor, missing EN pull-up,
+  missing I²C pull-ups). `intent_check` now has `pull`/`forbid_net` rules that catch them; those
+  rules were written after seeing the misses.
 - **Round trip:** KiCad's own serializers and the agent's text tool are both canonical, so diffs
   stay readable (moving a part is a 1-line diff). Rule: the schematic is generated (humans don't
   edit it in the GUI); the PCB is human-owned (the agent edits it surgically and DRC checks the result).
@@ -24,7 +28,8 @@ All numbers below come from runs in this repo (`gh run view <id>`) unless stated
 - **Agent layout (Q7):** a credit-card board (ID-1, rounded corners) from agent placement +
   Freerouting passes all gates; it misses USB pair routing and silk polish (§7).
 - **Release:** `hw-v0.1` published with the full fab package (§6).
-- **Not yet done:** a real GUI round trip by the owner (§2.3), a truly blind review (§4.2).
+- **Not yet done:** a real GUI round trip by the owner (§2.3). The fixes it was meant to cover
+  (stranded IMU GND, labels on pads) were done by the agent instead (§7.1).
 
 ---
 
@@ -177,7 +182,38 @@ The review was **not truly blind**: the reviewer (me) knew the five categories a
 checklist knowing them. A fair number needs a fresh reviewer that doesn't know the categories,
 N variants with 0–3 mistakes each (clean ones included), and categories not on the list (D+/D−
 swap, missing EN pull-up, wrong CC resistor value, I²C address clash, LED polarity), scored for
-misses **and** false alarms. Not done; needs a subagent run with the owner's OK.
+misses **and** false alarms. Done in §4.3.
+
+### 4.3 Blind review (blind2, 2026-11-17)
+Planted run 44046410233 (`gh workflow run planted.yml -f set=blind2`): 6 boards, 11 mistakes, random
+codes, board order shuffled. A fresh general-purpose subagent got the review folders (netlist,
+schematic PDF, renders, copper SVG, `parts.toml`) and a one-page spec. It was told only that "any
+board may have zero, one or several errors". It was not given the mistake list, the counts or the
+existence of a control, and was told to read nothing outside the folders. Its verdicts were committed
+before unblinding (`docs/experiments/blind-review-verdicts.md`).
+
+| board | planted | reviewer | gates (ERC / pin map / intent / DRC) |
+|---|---|---|---|
+| R34 | none (control) | no errors ✔ | all pass ✔ |
+| R27 | CC Rd 10k instead of 5.1k *(new type)* | ✔ | **none** |
+| R52 | LED reversed *(new)* + UART TX/RX swap | ✔ ✔ | swap: pin map; LED: only DRC shorts against old copper |
+| R57 | IMU CS floating + LDO output cap 100n *(new)* | ✔ (CS at 0.65 confidence) ✔ | ERC (CS), intent (22u missing) |
+| R63 | EN pull-up missing *(new)* + AMS1117 VI/VO swapped | ✔ ✔ | pinout: intent; EN: **none** |
+| R76 | USB D+/D− swap *(new)* + VBUS 0.15 mm + I²C pull-ups missing *(new)* | ✔ ✔ ✔ | swap: pin map; VBUS: custom DRC rule; pull-ups: **none** |
+
+- **Reviewer:** 11/11 caught, 0 false alarms, control passed. It read track widths from the copper SVG
+  stroke widths, which the image-only reviewer in §4 could not. It noticed parts changes by comparing
+  boards, but judged each one against the spec and datasheets.
+- **Gates:** 8/11, with 3 misses that are all "a part is present but wrong, or missing, and nothing
+  states the requirement". Fixed by two new `parts.toml` rules in `intent_check.py`:
+  `pull = { "EN" = "10k +3V3" }` (a resistor of that value from the pin's net to the rail; values are
+  compared numerically, `5k1` = `5.1k`) and `forbid_net = { "A" = "GND" }` (LED polarity). Re-run on
+  the same 6 netlists: every planted mistake fails a gate and the control passes. **Caveat:** these
+  rules were written after unblinding, so this measures coverage of the rules, not foresight. A
+  reversed *high-side* LED would still pass `forbid_net`.
+- **Reading:** with every requirement written down per part, the gates are deterministic and cheap.
+  The blind reviewer is the safety net for requirements nobody wrote down yet. Run both. Promote
+  each reviewer catch into a `parts.toml` rule.
 
 ## 5. Pin-map check
 
@@ -221,8 +257,8 @@ pours. The result is committed as the board (ee75d58); CI run 43875965287 is gre
 | power widths per class | pass | VBUS ≥ 0.4 mm enforced by a `.kicad_dru` error rule; +3V3 0.25 mm |
 | tracks at 45° only | pass | 0/167 segments off-angle |
 | rotations 0/90, parts inside the outline | pass | measured |
-| designators readable and off pads | **fail** | J1's designator sits on its pads; the C5/C6 and R3/C4 labels are crowded |
-| GND pour on both layers except under the antenna | pass with a waiver | 3 tiny top-pour slivers that no via fits → waived as an owner GUI task |
+| designators readable and off pads | **fail** → pass after §7.1 | J1's designator sat on its pads; the C5/C6 and R3/C4 labels were crowded |
+| GND pour on both layers except under the antenna | **fail** (was scored "pass with a waiver") → pass after §7.1 | the waived "slivers" were the IMU's GND pads, electrically open; see §7.1 |
 | silk: title + hash, J2 pinout, RST/BOOT, ANT | pass | `${GIT_HASH}` filled in by KiBot (`ee75d58` on the board) |
 | mounting holes | not done | optional; would need board-only footprints |
 | 0 unwaived DRC errors | pass | |
@@ -237,6 +273,28 @@ something the measurements showed:
 - my own decap gate passing **vacuously** (`pcb_sync` didn't set pad pin functions). It now fails when it finds nothing to check.
 
 Freerouting takes 6–8 s per run on this board.
+
+### 7.1 Agent rework (2026-11-17), instead of the owner's GUI session
+- **The waiver was hiding a real open.** The 3 "unconnected top-pour slivers" were the fragments
+  under U3 pins 1–3 and 6–7 (GND, SA0, SDx, SCx) and C5's GND pad. They had pads on them but no via, so the
+  IMU's ground connected to nothing. Freerouting had boxed them in: SDA and INT1 vias left of
+  pins 1–3, and a +3V3 track looped under pins 6–7. No straight track or via could escape
+  (`ci/probe/imu_area.sh` dumped the geometry). **Lesson:** never waive `unconnected_items` on a pour
+  as cosmetic without first listing which pads sit on the fragment. Waivers need the same proof as fixes.
+- **Fix** (`ci/probe/imu_reroute.sh`, run 44048603745):
+  1. Rip up SDA/INT1/INT2 and the +3V3 segments around U3 (48 items).
+  2. `tools/gnd_fanout.py --force U3.2,U3.6` places GND fan-out vias first.
+  3. Re-run Freerouting.
+  4. Remove dangling ends.
+  5. `gnd_fanout.py` joins, or fans out, any remaining stranded fragment.
+
+  Result: DRC 0 errors with **no waivers**, layout checklist 6/6, 0/174 off-angle segments.
+  Caveat: Freerouting with `-mp 100` re-optimises the whole board, so the PCB diff was ~160 segments
+  plus zone fill, not a local edit. On a human-owned board, re-route only with the owner's say-so.
+- **Labels:** `tools/fix_labels.py` moves a designator only when it overlaps a pad, other silk or
+  another label, or sits too close to the edge. It tries spots around the footprint. Result: 18 labels
+  moved, `silk_over_copper` 7 → 0, J1 off its pads.
+- Still open on the §7 checklist: the USB coupled pair (Freerouting can't route it) and mounting holes.
 
 **What this says about agent layout:** an agent can produce a DRC-clean, measurably reasonable
 2-layer layout for a small board if the rules are written down and measured. It needed
@@ -283,8 +341,9 @@ ci/Dockerfile                 CI image
 `template/` holds the files to copy into the tracker repo, with a README listing what to rename.
 
 ## Open items, in priority order
-1. Owner's GUI round trip (§2.3) and removing the bootstrap waiver it resolves.
-2. Truly blind review with a fresh subagent (§4.2).
+1. Owner's GUI round trip (§2.3): now only open-and-save in KiCad 10.0.8 plus a commit, to measure
+   the GUI re-save diff. The fixes it was meant to include were done by the agent (§7.1).
+2. ~~Truly blind review~~ done (§4.3). Next: re-run blind with new mistake types against the new gates.
 3. Hierarchical sheets in `schgen` for the larger tracker board.
 4. Hand-route USB as a coupled pair (Freerouting can't); score the owner's GUI version on the §7 checklist.
 5. Merge the CI jobs to pull the image once, if serialising is acceptable on the private repo.

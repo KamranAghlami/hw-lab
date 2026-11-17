@@ -20,3 +20,5 @@ metadata:
 
 **Why:** each of these broke a CI run or produced a wrong board in hw-lab.
 **How to apply:** check this list before debugging similar failures in the tracker repo. Related: [[owner-decisions]], [[dev-machine]].
+- pcbnew Python: `BOARD.GetBoardPolygonOutlines(poly, True)`; KiCad 10 requires the second argument (`aInferOutlineIfNecessary`).
+- Freerouting `-mp 100` on an already-routed board re-optimises existing tracks board-wide (~160 segments changed for a local rework). Expect a large diff.

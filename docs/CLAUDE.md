@@ -27,6 +27,11 @@ See `docs/findings.md` (§ "Recommended repo layout") for the annotated tree. In
   `./venv/bin/python tools/build_lib.py`.
 - PCB: human-owned (KiCad GUI). Agent edits go through `tools/kisexpr.py` and are always followed
   by DRC in CI. `tools/pcb_sync.py` = headless "Update PCB from Schematic" (runs in CI only).
+- PCB fixers (pcbnew, CI only): `gnd_fanout.py` (stranded top-pour GND pads → track/via),
+  `fix_labels.py` (designators off pads), `stitch_gnd.py`. Never waive `unconnected_items` on a
+  pour without listing the pads on the fragment: it may be a real open.
+- Part requirements live in `parts.toml` (`datasheet_pins`, `decap`, `pull`, `forbid_net`) and are
+  checked by `intent_check.py`. When a review catches something no gate did, add a rule there.
 - Gates (hardware.yml): regen, `sch_overlap.py`, ERC + `waivers.toml`, `pinmap.py`,
   `intent_check.py`, DRC + `hwlab.kicad_dru`, `layout_check.py --gate`.
 - Release: push a `hw-vX.Y` tag.
