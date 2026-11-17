@@ -39,6 +39,7 @@ def main() -> int:
     ap.add_argument("--hole-gap", type=float, default=0.5)
     ap.add_argument("--edge", type=float, default=0.3)
     ap.add_argument("--max-reach", type=float, default=3.0)
+    ap.add_argument("--force", default="", help="REF.PAD,... always get their own fan-out via (before rerouting)")
     a = ap.parse_args()
 
     b = pcbnew.LoadBoard(a.board)
@@ -88,7 +89,32 @@ def main() -> int:
     def ref(p):
         return f"{p.GetParentFootprint().GetReference()}.{p.GetNumber()}"
 
+    def fanout_spot(p):
+        p0 = p.GetPosition()
+        for k in range(4, int(a.max_reach / 0.1) + 1):
+            rad = MM(k * 0.1)
+            for j in range(24):
+                t = j * math.pi / 12
+                c = pcbnew.VECTOR2I(int(p0.x + rad * math.cos(t)), int(p0.y + rad * math.sin(t)))
+                if via_ok(c, p) and track_ok(p0, c, p):
+                    return c
+        return None
+
+    def add_via(c):
+        v = pcbnew.PCB_VIA(b)
+        v.SetPosition(c); v.SetWidth(MM(a.via)); v.SetDrill(MM(a.drill)); v.SetNet(gnd)
+        b.Add(v)
+        holes.append((c, drill)); anchors.append(c)
+
     fixed, failed = 0, []
+    for key in filter(None, a.force.split(",")):
+        r_, n_ = key.split(".")
+        p = [x for x in pads if x.GetParentFootprint().GetReference() == r_ and x.GetNumber() == n_][0]
+        c = fanout_spot(p)
+        if c is None:
+            print(f"forced {key}: NO fan-out spot"); failed.append(key); continue
+        add_track(p.GetPosition(), c); add_via(c); fixed += 1
+        print(f"forced {key}: via at ({pcbnew.ToMM(c.x):.2f}, {pcbnew.ToMM(c.y):.2f})")
     for rnd in range(4):  # a joined fragment can become the target of the next one
         filler.Fill(b.Zones())
         top = top_zone.GetFilledPolysList(pcbnew.F_Cu)
